@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  h2 프로그래밍 언어 관리
+  table
+    thead
+      tr
+        th 언어 이름
+        th 삭제
+    tbody
+      for lang in langs
+        tr
+          td= lang.lang_name
+          td
+            .input-group
+              form.create(action='/admin/lang/delete', method='post')
+                input.btn(type='hidden' name='lang_name' value=lang.lang_name)
+                button.btn(type='submit') X
+  
+  h2 프로그래밍 언어 추가
+  form.create(action='/admin/lang', method='post')
+      .input-group
+        label(for='lang_name') 언어 이름
+        input#id(type='lang_name' name='lang_name' required autofocus)
+      button.create.btn(type='submit') 등록
+      if createError
+        .error-message= createError
+
+block script

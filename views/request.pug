@@ -1,0 +1,47 @@
+extends layout
+
+block content
+  
+  h2= tableName
+  table
+    thead
+      tr
+        th 의뢰 번호
+        unless user && user.type=='client'
+          th 의뢰자 ID
+        th 의뢰 제목
+        th 의뢰 보상
+        th 의뢰 시작날짜
+        th 의뢰 종료날짜
+        th 최소 인원
+        th 최대 인원
+        th 최소 경력
+        th 개발 시작날짜
+        th 개발 종료날짜
+        if user
+          if user.type=='client'
+            th 신청자
+          else if user.type=='freelancer'
+            th 신청하기
+    tbody
+      for request in requests
+        tr
+          td
+            a(href='/request/'+request.rqid)= request.rqid
+          unless user && user.type=='client'
+            td= request.cid
+          td= request.rname
+          td= request.reward
+          td= format(request.start_date)
+          td= format(request.end_date)
+          td= request.min_people
+          td= request.max_people
+          td= request.min_career
+          td= format(request.dev_start)
+          td= format(request.dev_end)
+          if user
+            if user.type=='client'
+              td 목록버튼
+              //- TODO!!
+            else if user.type=='freelancer'
+              td 신청하기

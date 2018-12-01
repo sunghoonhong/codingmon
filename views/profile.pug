@@ -1,0 +1,106 @@
+extends layout
+
+block content
+
+  if target
+    if target.type == 'client'
+      form#profile-form(action='/'+target.type+'/profile/update' method='post')
+        .input-group
+          label(for='id') ID
+          input#id(name='id' value=target.id required readonly)
+        .input-group
+          label(for='pw') 비밀번호
+          if user.type == 'admin'
+            input#pw(type='hidden' name='pw' value=target.password required readonly)
+          else
+            input#pw(name='pw' value=target.password required readonly)
+        .input-group
+          label(for='name') 이름
+          input#name(name='name' value=target.name required readonly)
+        .input-group
+          label(for='phone_num') 휴대폰 번호
+          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+        .input-group
+          label(for='rating') 평점
+          input#rating(name='rating' value=target.rating required readonly)
+        if user.type == 'admin' || target.id == user.id
+          button#update-profile.btn(type='button') 수정
+          input#update-submit.btn(type='hidden' value='저장')
+
+    else if target.type == 'freelancer'
+      form#profile-form(action='/'+target.type+'/profile/update' method='post')
+        .input-group
+          label(for='id') ID
+          input#id(name='id' value=target.id required readonly)
+        .input-group
+          if user.type == 'admin'
+            input#pw(type='hidden' name='pw' value=target.password required readonly)
+          else
+            input#pw(name='pw' value=target.password required readonly)
+        .input-group
+          label(for='name') 이름
+          input#name(name='name' value=target.name required readonly)
+        .input-group
+          label(for='phone_num') 휴대폰 번호
+          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+        .input-group
+          label(for='age') 나이
+          input#age(name='age' value=target.age required readonly)
+        .input-group
+          label(for='major') 전공
+          input#major(name='major' value=target.major required readonly)  
+        .input-group
+          label(for='career') 경력
+          input#career(name='career' value=target.career required readonly)
+        .input-group
+          label(for='rating') 평점
+          input#rating(name='rating' value=target.rating required readonly)
+        if user.type == 'admin' || target.id == user.id
+          button#update-profile.btn(type='button') 수정
+          input#update-submit.btn(type='hidden' value='제출')
+    if user.type=='admin'
+      form(action='/'+target.type+'/profile/delete', method='post')
+        input(type='hidden' id='targetId' name='targetId' value=target.id)
+        input(type='hidden' id='targetType' name='targetType' value=target.type)
+        button.btn(type='submit') 삭제
+        
+      h2 언어별 능숙도
+      h2 내적 포트폴리오
+      h2 외적 포트폴리오
+
+  else
+    h2 그런 사람 없습니다
+  
+block script
+  if target
+    if target.type == 'client'
+      script.
+        document.querySelector('#update-profile').addEventListener('click', function(e) {
+          var toggleBtn = document.querySelector('#update-profile');
+          var submitBtn = document.querySelector('#update-submit');
+          if(toggleBtn.textContent == '취소') {
+            return history.go(0);
+          }
+          document.querySelector('#pw').toggleAttribute('readonly');
+          document.querySelector('#name').toggleAttribute('readonly');
+          document.querySelector('#phone_num').toggleAttribute('readonly');
+          toggleBtn.textContent = toggleBtn.textContent=='수정' ? '취소' : '수정';
+          submitBtn.type = toggleBtn.textContent=='수정' ? 'hidden' : 'submit';
+        });
+    else if target.type == 'freelancer'
+      script.
+        document.querySelector('#update-profile').addEventListener('click', function(e) {
+          var toggleBtn = document.querySelector('#update-profile');
+          var submitBtn = document.querySelector('#update-submit');
+          if(toggleBtn.textContent == '취소') {
+            return history.go(0);
+          }
+          document.querySelector('#pw').toggleAttribute('readonly');
+          document.querySelector('#name').toggleAttribute('readonly');
+          document.querySelector('#phone_num').toggleAttribute('readonly');
+          document.querySelector('#age').toggleAttribute('readonly');
+          document.querySelector('#major').toggleAttribute('readonly');
+          document.querySelector('#career').toggleAttribute('readonly');
+          toggleBtn.textContent = toggleBtn.textContent=='수정' ? '취소' : '수정';
+          submitBtn.type = toggleBtn.textContent=='수정' ? 'hidden' : 'submit';
+        });

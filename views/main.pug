@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  if !user
+    h1 Hello Codingmon
+    h1 Please Log In
+  else if user.type == 'admin'
+    h2 관리자 모드
+
+  else if user.type == 'freelancer'
+    h2 프리랜서 모드
+
+  else if user.type == 'client'
+    h2 의뢰자 모드

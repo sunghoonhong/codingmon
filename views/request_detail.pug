@@ -1,0 +1,77 @@
+extends layout
+
+block content
+  h2 의뢰 정보
+  form#profile-form(action='/request/update' method='post')
+    .input-group
+      label(for='rqid') 의뢰번호
+      input#id(name='rqid' value=request.rqid required readonly)
+    .input-group
+      if user && user.type == 'client'
+        input#cid(type='hidden' name='cid' value=request.cid required readonly)
+      else
+        label(for='cid') 의뢰자 ID
+        input#cid(name='cid' value=request.cid required readonly)
+    .input-group
+      label(for='rname') 의뢰 제목
+      input#rname(name='rname' value=request.rname required readonly)
+    .input-group
+      label(for='reward') 의뢰 보상
+      input#reward(type='number' name='reward' value=request.reward required readonly)
+    .input-group
+      label(for='min_people') 최소 인원
+      input#min_people(type='number' name='min_people' value=request.min_people required readonly)
+    .input-group
+      label(for='max_people') 최대 인원
+      input#max_people(type='number' name='max_people' value=request.max_people required readonly)
+    .input-group
+      label(for='min_career') 최소 경력
+      input#min_career(type='number' name='min_career' value=request.min_career required readonly)
+    .input-group
+      label(for='start_date') 의뢰 시작날짜
+      input#start_date(type='date' name='start_date' value=format(request.start_date) required readonly)
+    .input-group
+      label(for='end_date') 의뢰 종료날짜
+      input#end_date(type='date' name='end_date' value=format(request.end_date) required readonly)
+    .input-group
+      label(for='dev_start') 개발 시작날짜
+      if request.dev_start
+        input#dev_start(type='date' name='dev_start' value=format(request.dev_start) readonly)
+      else
+        input#dev_start(type='date' name='dev_start' readonly)
+    .input-group
+      label(for='dev_end') 개발 종료날짜
+      if request.dev_start
+        input#dev_end(type='date' name='dev_end' value=format(request.dev_end) readonly)
+      else
+        input#dev_end(type='date' name='dev_end' readonly)
+
+    if user && user.type == 'admin'
+      button#update-request.btn(type='button') 수정
+      input#update-submit.btn(type='hidden' value='저장')
+      form(action='/request/delete', method='post')
+        input(type='hidden' name='targetId' value=request.rqid)
+        button.btn(type='submit') 삭제
+
+block script
+  if user && user.type == 'admin'
+    script.
+      document.querySelector('#update-request').addEventListener('click', function(e) {
+        var toggleBtn = document.querySelector('#update-request');
+        var submitBtn = document.querySelector('#update-submit');
+        if(toggleBtn.textContent == '취소') {
+          return history.go(0);
+        }
+        document.querySelector('#rname').toggleAttribute('readonly');
+        document.querySelector('#reward').toggleAttribute('readonly');
+        document.querySelector('#min_people').toggleAttribute('readonly');
+        document.querySelector('#max_people').toggleAttribute('readonly');
+        document.querySelector('#min_career').toggleAttribute('readonly');
+        document.querySelector('#start_date').toggleAttribute('readonly');
+        document.querySelector('#end_date').toggleAttribute('readonly');
+        document.querySelector('#dev_start').toggleAttribute('readonly');
+        document.querySelector('#dev_end').toggleAttribute('readonly');
+        
+        toggleBtn.textContent = toggleBtn.textContent=='수정' ? '취소' : '수정';
+        submitBtn.type = toggleBtn.textContent=='수정' ? 'hidden' : 'submit';
+      });
