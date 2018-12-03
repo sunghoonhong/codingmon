@@ -49,7 +49,7 @@ module.exports = (passport) => {
             try {
                 const type = user.type;
                 const [exUser] = await conn.query(
-                    'SELECT * FROM ? WHERE id=?', [type, id]
+                    'SELECT * FROM '+type+' WHERE id=?', user.id
                 );
                 user = exUser[0];
                 user.type = type;

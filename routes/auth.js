@@ -16,7 +16,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
       const [exUser] = await conn.query(
-        'SELECT id, password FROM administrator WHERE id=?  \
+        'SELECT id, password FROM admin WHERE id=?  \
             UNION   \
         SELECT id, password FROM freelancer WHERE id=? \
             UNION   \
@@ -76,7 +76,7 @@ router.post('/join/client', isNotLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
       const [exUser] = await conn.query(
-        'SELECT id, password FROM administrator WHERE id=?  \
+        'SELECT id, password FROM admin WHERE id=?  \
             UNION   \
         SELECT id, password FROM freelancer WHERE id=? \
             UNION   \
