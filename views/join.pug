@@ -7,7 +7,7 @@ block content
       form#join_type(action='/join', method='post')
         .input-group
           label(for='joinType') 가입 유형
-          select(name='joinType', id='joinType', required)
+          select(name='joinType' id='joinType', required)
             option(value='freelancer') 프리랜서
             option(value='client') 의뢰자
         button#join.btn(type='submit') 가입
@@ -20,31 +20,37 @@ block content
     form#join-form(action='/auth/join/freelancer' method='post')
       .input-group
         label(for='id') ID
-        input#id(type='id' name='id' required autofocus)
+        input#id(name='id' required autofocus)
       .input-group
         label(for='pw') 비밀번호
-        input#pw(type='pw' name='pw' required)
+        input#pw(name='pw' required)
       .input-group
         label(for='name') 이름
-        input#pw(type='name' name='name' required)
+        input#pw(name='name' required)
       .input-group
         label(for='phone_num') 휴대폰 번호
-        input#pw(type='phone_num' name='phone_num' required)
+        input#pw(name='phone_num' required)
       .input-group
         label(for='age') 나이
-        input#pw(type='age' name='age' required)
+        input#pw(name='age' required)
       .input-group
         label(for='major') 전공
-        input#pw(type='major' name='major' required)  
+        input#pw(name='major' required)  
       .input-group
         label(for='career') 경력
-        input#pw(type='career' name='career' required)
+        input#pw(name='career' required)
+      .input-group
+        label(for='lang_name') 언어
+        select#lang_name(name='lang_name' required)
+          for lang in langs
+            option(value=lang.lang_name)= lang.lang_name
+      .input-group
+        label(for='level') 능숙도
+        input#level(type='number' name='level' required)
       button#join.btn(type='submit') 가입
       if joinError
         .error-message= joinError
     
-    h2 언어별능숙도 해야함!
-
   else if joinType=='client'
     h2= 'Client Join'
     form#join-form(action='/auth/join/client' method='post')

@@ -6,26 +6,46 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
-router.get('/join', isNotLoggedIn, (req, res) => {
+router.get('/join', isNotLoggedIn, async (req, res) => {
     var title = '회원가입';
     if(req.body.joinType) {
         title += ' ' + req.body.joinType;
     }
-    res.render('join', {
-        title: title,
-        user: req.user,
-        joinType: req.body.joinType,
-        joinError: req.flash('joinError'),
-    });
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [langs] = await conn.query(
+            'SELECT lang_name FROM program_lang'
+        );
+        res.render('join', {
+            title: title,
+            user: req.user,
+            langs: langs,
+            joinType: req.body.joinType,
+            joinError: req.flash('joinError'),
+        });
+    }
+    catch (err) {
+        console.error(err);
+    }
 });
 
-router.post('/join', isNotLoggedIn, (req, res) => {
-    res.render('join', {
-        title: ' 회원가입 ' + req.body.joinType,
-        user: req.user,
-        joinType: req.body.joinType,
-        joinError: req.flash('joinError'),
-    });
+router.post('/join', isNotLoggedIn, async (req, res) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [langs]= await conn.query(
+            'SELECT lang_name FROM program_lang'
+        );
+        res.render('join', {
+            title: ' 회원가입 ' + req.body.joinType,
+            user: req.user,
+            langs: langs,
+            joinType: req.body.joinType,
+            joinError: req.flash('joinError'),
+        });
+    }
+    catch (err) {
+        console.error(err);
+    }
 });
 
 router.get('/profile/:id', async (req, res) => {

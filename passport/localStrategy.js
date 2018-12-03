@@ -36,9 +36,8 @@ module.exports = (passport) => {
                         [id, id]
                     );
                     conn.release();
-                    const hash = await bcrypt.hash(pw, 13);
                     if (exUser.length) {
-                        const result = await bcrypt.compare(hash, exUser[0].password);
+                        const result = await bcrypt.compare(pw, exUser[0].password);
                         if (result) {
                             done(null, exUser[0]);
                         }

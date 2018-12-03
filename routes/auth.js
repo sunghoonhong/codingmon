@@ -10,7 +10,7 @@ const pool = mysql.createPool(dbconfig);
 
 router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
   const { 
-    id, pw, name, phone_num, age, major, career
+    id, pw, name, phone_num, age, major, career, lang_name, level
   } = req.body;
   try {
     const conn = await pool.getConnection(async conn => conn);
@@ -45,6 +45,14 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         [ id, hash, name, phone_num,
         age, major, career, jobSeeker.insertId ]
       );
+
+      await conn.query(
+        'INSERT INTO knows( \
+          job_seeker_id, lang_name, level) \
+        VALUES(?, ?, ?)',
+        [jobSeeker.insertId, lang_name, level]
+      );
+
       return res.redirect('/');
     }
     catch (err) {
