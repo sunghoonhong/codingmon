@@ -4,10 +4,10 @@ block content
   if !joinType
     h2= 'Select Join Type'
     .jointype
-      form#join_type(action='/join', method='post')
+      form#join_type(action='/join' method='post')
         .input-group
           label(for='joinType') 가입 유형
-          select(name='joinType' id='joinType', required)
+          select(name='joinType' id='joinType' required)
             option(value='freelancer') 프리랜서
             option(value='client') 의뢰자
         button#join.btn(type='submit') 가입
@@ -56,16 +56,16 @@ block content
     form#join-form(action='/auth/join/client' method='post')
       .input-group
         label(for='id') ID
-        input#id(type='id' name='id' required autofocus)
+        input#id(name='id' required autofocus)
       .input-group
         label(for='pw') 비밀번호
-        input#pw(type='pw' name='pw' required)
+        input#pw(name='pw' required)
       .input-group
         label(for='name') 이름
-        input#pw(type='name' name='name' required)
+        input#pw(name='name' required)
       .input-group
         label(for='phone_num') 휴대폰 번호
-        input#pw(type='phone_num' name='phone_num' required)
+        input#pw(name='phone_num' required)
       button#join.btn(type='submit') 가입
         if joinError
           .error-message= joinError
