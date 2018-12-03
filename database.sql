@@ -1,11 +1,14 @@
 CREATE DATABASE IF NOT EXISTS codingmon;
 USE codingmon;
 
-CREATE TABLE IF NOT EXISTS administrator (
+CREATE TABLE IF NOT EXISTS admin (
     id VARCHAR(20) NOT NULL,
     password VARCHAR(20) NOT NULL,
     PRIMARY KEY (id)
 );
+
+INSERT INTO admin(id, password) SELECT 'admin', '123'
+WHERE NOT EXISTS (SELECT * FROM admin WHERE id='admin');
 
 CREATE TABLE IF NOT EXISTS job_seeker (
     job_seeker_id INT NOT NULL AUTO_INCREMENT,
