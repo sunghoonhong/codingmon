@@ -7,12 +7,26 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
-router.get('/profile', isLoggedIn, (req, res) => {
-    res.render('profile', {
-        title: '나의 프로필',
-        user: req.user,
-        target: req.user
-    });
+router.get('/profile', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [langs] = await conn.query(
+            'SELECT lang_name, level FROM knows \
+            WHERE job_seeker_id=?',
+            req.user.job_seeker_id
+        );
+        res.render('profile', {
+            title: '나의 프로필',
+            user: req.user,
+            target: req.user,
+            langs: langs,
+            updateError: req.flash('updateError')
+        });
+    }
+    catch (err) {
+        console.error(err);
+        next(err);
+    }
 });
 
 router.get('/profile/:id', (req, res) => {
@@ -20,6 +34,30 @@ router.get('/profile/:id', (req, res) => {
 });
 
 router.post('/profile/update', isLoggedIn, async (req, res, next) => {
+    const keys = Object.keys(req.body);
+    var langFlag = false
+    const langIndex = 8;    // rating도 body에 있어서 8부터 언어시작
+    for(var i=langIndex; i < keys.length; i++) {
+        if(req.body[keys[i]] != 0) {
+            langFlag = true;
+            break;
+        }
+    }
+    try {
+        if(!langFlag) {
+            req.flash('updateError', '적어도 하나의 언어는 하세요');
+            if(req.user.type=='admin') {
+                return res.render('alert', {
+                    message: req.flash('updateError')
+                });
+            }
+            else
+                return res.redirect('/client/profile');
+        }
+    }
+    catch (err) {
+        next(err);
+    }
     const { 
         id, pw, name, phone_num, age, major, career
     } = req.body;
@@ -41,6 +79,23 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
         await conn.query(
             sql, params
         );
+        var jsid;
+        if (req.user.type=='freelancer')
+            jsid = req.user.job_seeker_id;
+        else {
+            [[jsid]] = await conn.query(
+                'SELECT job_seeker_id FROM freelancer \
+                WHERE id=?', id
+            );
+            jsid = jsid.job_seeker_id;
+        }
+        for(var i=langIndex; i < keys.length; i++) {
+            await conn.query(
+                'UPDATE knows SET level=? \
+                WHERE job_seeker_id=? AND lang_name=?',
+                [req.body[keys[i]], jsid, keys[i]]
+            );
+        }
         res.redirect('/');
     }
     catch (err) {

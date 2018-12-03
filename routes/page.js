@@ -11,22 +11,12 @@ router.get('/join', isNotLoggedIn, async (req, res) => {
     if(req.body.joinType) {
         title += ' ' + req.body.joinType;
     }
-    const conn = await pool.getConnection(async conn => conn);
-    try {
-        const [langs] = await conn.query(
-            'SELECT lang_name FROM program_lang'
-        );
-        res.render('join', {
-            title: title,
-            user: req.user,
-            langs: langs,
-            joinType: req.body.joinType,
-            joinError: req.flash('joinError'),
-        });
-    }
-    catch (err) {
-        console.error(err);
-    }
+    res.render('join', {
+        title: title,
+        user: req.user,
+        joinType: req.body.joinType,
+        joinError: req.flash('joinError'),
+    });
 });
 
 router.post('/join', isNotLoggedIn, async (req, res) => {
@@ -48,7 +38,7 @@ router.post('/join', isNotLoggedIn, async (req, res) => {
     }
 });
 
-router.get('/profile/:id', async (req, res) => {
+router.get('/profile/:id', async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [exFree] = await conn.query(
@@ -63,6 +53,11 @@ router.get('/profile/:id', async (req, res) => {
         if(exFree.length) {
             target = exFree[0];
             target.type = 'freelancer';
+            var [langs] = await conn.query(
+                'SELECT lang_name, level FROM knows \
+                WHERE job_seeker_id=?',
+                target.job_seeker_id
+            );   
         }
         else if(exClient.length) {
             target = exClient[0];
@@ -72,11 +67,14 @@ router.get('/profile/:id', async (req, res) => {
         res.render('profile', {
             title: req.params.id +'의 프로필',
             user: req.user,
-            target: target
+            target: target,
+            langs: langs,
+            updateError: req.flash('updateError')
         });
     }
     catch (err) {
         console.error(err);
+        next(err);
     }
 })
 
@@ -102,6 +100,7 @@ router.get('/request/:id', async (req, res, next) => {
         }
     }
     catch (err) {
+        console.error(err);
         next(err);
     }
 });

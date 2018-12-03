@@ -14,7 +14,7 @@ module.exports = (passport) => {
             const conn = await pool.getConnection(async conn => conn);
             try {
                 const [exAdmin] = await conn.query(
-                    'SELECT id, password FROM administrator WHERE id=?', id
+                    'SELECT id, password FROM admin WHERE id=?', id
                 );
                 if(exAdmin.length) {
                     conn.release();
