@@ -39,14 +39,11 @@ block content
       .input-group
         label(for='career') 경력
         input#pw(name='career' required)
-      .input-group
-        label(for='lang_name') 언어
-        select#lang_name(name='lang_name' required)
-          for lang in langs
-            option(value=lang.lang_name)= lang.lang_name
-      .input-group
-        label(for='level') 능숙도
-        input#level(type='number' name='level' required)
+      h3 프로그래밍 언어별 능숙도
+      for lang in langs
+        .input-group
+          label(for=lang.lang_name)= lang.lang_name 
+          input(type='number' id=lang.lang_name name=lang.lang_name value=0 required)
       button#join.btn(type='submit') 가입
       if joinError
         .error-message= joinError

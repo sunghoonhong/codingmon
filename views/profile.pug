@@ -50,10 +50,19 @@ block content
         .input-group
           label(for='rating') 평점
           input#rating(name='rating' value=target.rating required readonly)
+        
+        h3 프로그래밍 언어별 능숙도
+        for lang in langs
+          .input-group
+            label(for=lang.lang_name)= lang.lang_name
+            input(type='number' id=lang.lang_name name=lang.lang_name value=lang.level required readonly)
+
         if user.type == 'admin' || target.id == user.id
           button#update-profile.btn(type='button') 수정
           input#update-submit.btn(type='hidden' value='제출')
-        h2 언어별 능숙도
+          if updateError
+            .error-message= updateError
+
         h2 내적 포트폴리오
         h2 외적 포트폴리오
 
@@ -96,6 +105,13 @@ block script
           document.querySelector('#age').toggleAttribute('readonly');
           document.querySelector('#major').toggleAttribute('readonly');
           document.querySelector('#career').toggleAttribute('readonly');
+          var langs = !{JSON.stringify(langs)};
+          langs.forEach((lang => {
+            document.querySelector('#'+lang.lang_name).toggleAttribute('readonly');
+          }))
           toggleBtn.textContent = toggleBtn.textContent=='수정' ? '취소' : '수정';
           submitBtn.type = toggleBtn.textContent=='수정' ? 'hidden' : 'submit';
         });
+        
+          
+

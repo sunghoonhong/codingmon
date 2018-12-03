@@ -13,7 +13,7 @@ module.exports = (passport) => {
                     'SELECT id FROM admin WHERE id=?', id
                 );
                 const [exFree] = await conn.query(
-                    'SELECT id FROM freelancer WHERE id=?', id
+                    'SELECT id, job_seeker_id FROM freelancer WHERE id=?', id
                 );
                 const [exClient] = await conn.query(
                     'SELECT id FROM client WHERE id=?', id

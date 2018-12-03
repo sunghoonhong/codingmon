@@ -9,9 +9,23 @@ const router = express.Router();
 const pool = mysql.createPool(dbconfig);
 
 router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
+  const keys = Object.keys(req.body);
+  var langFlag = false;
+  var langIndex = 7;  // career 까지만 body로 들어오고 7부터 언어시작
+  for(var i=langIndex; i < keys.length; i++) {
+    if(req.body[keys[i]] != 0) {
+      langFlag = true;
+      break;
+    }
+  }
+  if(!langFlag) {
+    req.flash('joinError', '언어 능숙도를 입력하세요');
+    return res.redirect('/join');
+  }
   const { 
-    id, pw, name, phone_num, age, major, career, lang_name, level
+    id, pw, name, phone_num, age, major, career
   } = req.body;
+  // console.log(req.body);
   try {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -45,14 +59,16 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         [ id, hash, name, phone_num,
         age, major, career, jobSeeker.insertId ]
       );
-
-      await conn.query(
-        'INSERT INTO knows( \
-          job_seeker_id, lang_name, level) \
-        VALUES(?, ?, ?)',
-        [jobSeeker.insertId, lang_name, level]
-      );
-
+        
+      const keys = Object.keys(req.body);
+      for(var i=langIndex; i < keys.length; i++) {
+        await conn.query(
+          'INSERT INTO knows( \
+            job_seeker_id, lang_name, level) \
+          VALUES(?, ?, ?)',
+          [jobSeeker.insertId, keys[i], req.body[keys[i]]]
+        );
+      }
       return res.redirect('/');
     }
     catch (err) {
@@ -71,7 +87,6 @@ router.post('/join/client', isNotLoggedIn, async (req, res, next) => {
   const { 
     id, pw, name, phone_num
   } = req.body;
-
   try {
     const conn = await pool.getConnection(async conn => conn);
     try {
