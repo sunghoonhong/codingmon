@@ -10,10 +10,7 @@ block content
           input#id(name='id' value=target.id required readonly)
         .input-group
           label(for='pw') 비밀번호
-          if user.type == 'admin'
-            input#pw(type='hidden' name='pw' value=target.password required readonly)
-          else
-            input#pw(name='pw' value=target.password required readonly)
+          input#pw(name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
         .input-group
           label(for='name') 이름
           input#name(name='name' value=target.name required readonly)
@@ -33,10 +30,8 @@ block content
           label(for='id') ID
           input#id(name='id' value=target.id required readonly)
         .input-group
-          if user.type == 'admin'
-            input#pw(type='hidden' name='pw' value=target.password required readonly)
-          else
-            input#pw(name='pw' value=target.password required readonly)
+          label(for='pw') 비밀번호
+          input#pw(name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
         .input-group
           label(for='name') 이름
           input#name(name='name' value=target.name required readonly)
@@ -58,16 +53,16 @@ block content
         if user.type == 'admin' || target.id == user.id
           button#update-profile.btn(type='button') 수정
           input#update-submit.btn(type='hidden' value='제출')
+        h2 언어별 능숙도
+        h2 내적 포트폴리오
+        h2 외적 포트폴리오
+
     if user.type=='admin'
       form(action='/'+target.type+'/profile/delete', method='post')
         input(type='hidden' id='targetId' name='targetId' value=target.id)
         input(type='hidden' id='targetType' name='targetType' value=target.type)
         button.btn(type='submit') 삭제
-        
-      h2 언어별 능숙도
-      h2 내적 포트폴리오
-      h2 외적 포트폴리오
-
+   
   else
     h2 그런 사람 없습니다
   

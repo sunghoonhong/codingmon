@@ -13,20 +13,14 @@ module.exports = (passport) => {
         try {
             const conn = await pool.getConnection(async conn => conn);
             try {
-                const [exUser] = await conn.query(
-                    'SELECT id, password FROM administrator WHERE id=?  \
-                        UNION   \
-                    SELECT id, password FROM freelancer WHERE id=? \
-                        UNION   \
-                    SELECT id, password FROM client WHERE id=?',
-                    [id, id, id]
+                const [exAdmin] = await conn.query(
+                    'SELECT id, password FROM administrator WHERE id=?', id
                 );
-                conn.release();
-                
-                if (exUser.length) {
-                    const result = pw == exUser[0].password;
+                if(exAdmin.length) {
+                    conn.release();
+                    const result = pw == exAdmin[0].password;
                     if (result) {
-                        done(null, exUser[0]);
+                        done(null, exAdmin[0]);
                     }
                     else {
                         done(null, false, {
@@ -35,9 +29,30 @@ module.exports = (passport) => {
                     }
                 }
                 else {
-                    done(null, false, {
-                        message: 'Unregistered'
-                    });
+                    const [exUser] = await conn.query(
+                        'SELECT id, password FROM freelancer WHERE id=? \
+                            UNION   \
+                        SELECT id, password FROM client WHERE id=?',
+                        [id, id]
+                    );
+                    conn.release();
+                    const hash = await bcrypt.hash(pw, 13);
+                    if (exUser.length) {
+                        const result = await bcrypt.compare(hash, exUser[0].password);
+                        if (result) {
+                            done(null, exUser[0]);
+                        }
+                        else {
+                            done(null, false, {
+                                message: 'wrong password'
+                            });
+                        }
+                    }
+                    else {
+                        done(null, false, {
+                            message: 'Unregistered'
+                        });
+                    }
                 }
             }
             catch (err) {

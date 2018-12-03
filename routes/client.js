@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
 const { 
     isLoggedIn, isNotLoggedIn, isAdmin, isFreelancer, isClient
 } = require('./middlewares');
@@ -24,13 +25,21 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     const { 
         id, pw, name, phone_num
     } = req.body;
+    var sql = 'UPDATE client SET name=?, phone_num=?';
+    var params = [
+        name, phone_num
+    ];
+    if(pw!='비밀번호') {
+        const hash = await bcrypt.hash(pw, 13);
+        sql += ', password=?';
+        params.push(hash);
+    }
+    sql += ' WHERE id=?';
+    params.push(id);
     const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(
-            'UPDATE client  \
-            SET password=?, name=?, phone_num=? \
-            WHERE id=?',
-            [pw, name, phone_num, id]
+            sql, params       
         );
         res.redirect('/');
     }

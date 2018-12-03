@@ -34,6 +34,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
       // const jobSeeker = await conn.query(
       //   'SELECT * FROM job_seeker ORDER BY job_seeker_id DESC LIMIT 1'
       // );
+      const hash = await bcrypt.hash(pw, 13);
       await conn.query(
         'INSERT INTO freelancer( \
         id, password, name, phone_num, \
@@ -41,7 +42,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         job_seeker_id) \
         VALUES(?, ?, ?, ?, ?, ?, ?, \
         ?)', 
-        [ id, pw, name, phone_num,
+        [ id, hash, name, phone_num,
         age, major, career, jobSeeker.insertId ]
       );
       return res.redirect('/');
@@ -78,6 +79,7 @@ router.post('/join/client', isNotLoggedIn, async (req, res, next) => {
         req.flash('joinError', 'Already registered');
         return res.redirect('/join');
       }
+      const hash = await bcrypt.hash(pw, 13);
       await conn.query(
           'INSERT INTO client( \
             id, password, name, phone_num \
@@ -85,7 +87,7 @@ router.post('/join/client', isNotLoggedIn, async (req, res, next) => {
           VALUES( \
             ?, ?, ?, ? \
           )', 
-          [ id, pw, name, phone_num ]
+          [ id, hash, name, phone_num ]
       );
       conn.release();
       return res.redirect('/');
