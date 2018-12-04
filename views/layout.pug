@@ -27,6 +27,7 @@ html
           a#user.btn(href='/admin/user') 사용자 관리
           a#request.btn(href='/admin/request') 의뢰 관리
           a#team.btn(href='/admin/team') 팀 관리
+          a#report.btn(href='/admin/report') 의뢰완료신청 관리
           a#lang.btn(href='/admin/lang') 언어 관리
 
         else if user.type == 'freelancer'
@@ -34,10 +35,11 @@ html
           a.btn(href='/freelancer/request') 전체 의뢰
           a.btn(href='/freelancer/waiting') 신청한 의뢰
           a.btn(href='/freelancer/working') 진행중인 의뢰
-          a.btn(href='/freelancer/team') 팀 정보
+          a.btn(href='/team/list') 나의 팀 목록
+          a.btn(href='/team/create') 팀 생성
 
         else if user.type == 'client'
-          a.btn(href='/client/profile/') 프로필
+          a.btn(href='/client/profile') 프로필
           a.btn(href='/client/request') 나의 의뢰
           a.btn(href='/client/report') 완료요청 확인
           a.btn(href='/client/register') 의뢰 등록
@@ -51,10 +53,10 @@ html
           form#login-form(action='/auth/login' method='post')
             .input-group
               label(for='id') ID
-              input#id(type='id' name='id' required autofocus)
+              input#id(name='id' required autofocus)
             .input-group
               label(for='pw') PW
-              input#pw(type='pw' name='pw' required)
+              input#pw(type='password' name='pw' required)
             if loginError
               .error-message= loginError
             button#login.btn(type='submit') Login

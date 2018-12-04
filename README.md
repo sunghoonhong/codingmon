@@ -8,7 +8,7 @@
 3. **관리자** 관리
   - ~~사용자 관리~~
   - ~~의뢰 관리~~
-  - 팀 관리
+  - ~~팀 관리~~
   - 의뢰완료요청 관리
 4. **프리랜서** 정보 수정
   - ~~개인 정보 수정~~
@@ -62,8 +62,16 @@ port는 DB 포트인데, mysql이면 보통 3306
 database는 mysql의 스키마 선택인데, 프로젝트2 sql스크립트 쓰면 자동으로 codingmon 생김
 
 ### SQL 준비
+#### MySQL 로그인
+- cmd 에서 mysql -u root -p 입력
+- 비밀번호 입력  
+
 Mysql shell에서 
-> source "sql_script_경로"
+> source TEMP_PATH/database.sql ("sql_script_경로")
 
 ### 서버 시작
 > npm start
+
+## 서버 테스트
+### 관리자 계정
+> {id: 'admin', password: '123'}

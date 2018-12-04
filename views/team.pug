@@ -1,4 +1,9 @@
 extends layout
 
 block content
-  p teams
+  .menu
+    a.btn(href='/team/profile/'+tname) 팀 정보
+    a.btn(href='/team/request/'+tname) 전체 의뢰
+    a.btn(href='/team/waiting/'+tname) 신청한 의뢰
+    a.btn(href='/team/working/'+tname) 진행 중인 의뢰
+  h2= `${tname} 팀 페이지`

@@ -1,3 +1,7 @@
+const mysql = require('mysql2/promise');
+const dbconfig = require('../config/database');
+const pool = mysql.createPool(dbconfig);
+
 exports.isLoggedIn = (req, res, next) => {
     if (req.isAuthenticated()) {
         next();
@@ -45,3 +49,25 @@ exports.isClient = (req, res, next) => {
         res.status(403).send('당신은 의뢰자가 아닙니다');
     }
 };
+
+exports.isMgr = async (req, res, next) => {
+    const tname = req.params.tname;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[exMgr]] = await conn.query(
+            'SELECT * FROM team WHERE mgr_id=? AND tname=?',
+            [req.user.id, tname]
+        );
+        if(exMgr) {
+            next();
+        }
+        else {
+            res.status(403).send('당신은 팀장이 아닙니다');
+        }
+    }
+    catch (err) {
+        console.log(req.params);
+        console.error(err);
+        res.status(403).send('Query error');
+    }
+}

@@ -14,6 +14,7 @@ const authRouter = require('./routes/auth');
 const adminRouter = require('./routes/admin');
 const freelancerRouter = require('./routes/freelancer');
 const clientRouter = require('./routes/client');
+const teamRouter = require('./routes/team');
 const passportConfig = require('./passport');
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/auth', authRouter);
 app.use('/admin', adminRouter);
 app.use('/freelancer', freelancerRouter);
 app.use('/client', clientRouter);
+app.use('/team', teamRouter);
 
 app.use((req, res, next) => {
     const err = new Error('Not Found');

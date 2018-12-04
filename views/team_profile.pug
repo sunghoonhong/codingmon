@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  label(for='tname') 팀 이름
+  div#tname= team.tname
+
+  label(for='mgr_id') 팀장 ID
+  div#mgr_id= team.mgr_id
+
+  label(for='career') 경력
+  div#career= team.career
+
+  h3 팀 멤버
+  table
+    tr
+      th 멤버 ID
+      th 추방
+    for member in members
+      tr
+        th= member.fid
+        th
+          if member.fid == team.mgr_id
+            |팀장
+            -continue
+          form(action='/team/ban' method='post')
+            input(type='hidden' name='tname' value=team.tname)
+            input(type='hidden' name='banId' value=member.fid)
+            button.btn(type='submit') X
+
+  button.btn 멤버 추가(예정...)
+  h3 팀 삭제
+  form(action='/team/delete' method='post')
+    input(type='hidden' name='tname' value=team.tname)
+    button.btn(type='submit') 삭제
