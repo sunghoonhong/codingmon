@@ -43,7 +43,7 @@ block content
       for lang in langs
         .input-group
           label(for=lang.lang_name)= lang.lang_name 
-          input(type='number' id=lang.lang_name name=lang.lang_name value=0 required)
+          input(type='number' min='0' max='5' id=lang.lang_name name=lang.lang_name value=0 required)
       button#join.btn(type='submit') 가입
       if joinError
         .error-message= joinError

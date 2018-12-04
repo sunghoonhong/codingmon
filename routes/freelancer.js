@@ -10,11 +10,23 @@ const pool = mysql.createPool(dbconfig);
 router.get('/profile', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [langs] = await conn.query(
+        var [knows] = await conn.query(
             'SELECT lang_name, level FROM knows \
             WHERE job_seeker_id=?',
             req.user.job_seeker_id
         );
+        var [langs] = await conn.query(
+            'SELECT lang_name FROM program_lang'
+        );
+        for(var i=0; i<langs.length; ++i) {
+            langs[i].level = 0;
+            for(var j=0; j<knows.length; ++j) {
+                if(langs[i].lang_name == knows[j].lang_name) {
+                    langs[i].level = knows[j].level;
+                    break;
+                }
+            }
+        }
         res.render('profile', {
             title: '나의 프로필',
             user: req.user,
@@ -90,11 +102,19 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
             jsid = jsid.job_seeker_id;
         }
         for(var i=langIndex; i < keys.length; i++) {
-            await conn.query(
-                'UPDATE knows SET level=? \
-                WHERE job_seeker_id=? AND lang_name=?',
-                [req.body[keys[i]], jsid, keys[i]]
-            );
+            if(req.body[keys[i]] > 0) {
+                await conn.query(
+                    'INSERT INTO knows (job_seeker_id, lang_name, level) \
+                    VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
+                    [jsid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+                );
+            }
+            else if(req.body[keys[i]] == 0) {
+                await conn.query(
+                    'DELETE FROM knows WHERE job_seeker_id=? AND lang_name=?',
+                    [jsid, keys[i]]
+                );
+            }
         }
         res.redirect('/');
     }

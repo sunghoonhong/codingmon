@@ -19,7 +19,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
     }
   }
   if(!langFlag) {
-    req.flash('joinError', '언어 능숙도를 입력하세요');
+    req.flash('joinError', '적어도 언어 하나는 하세요');
     return res.redirect('/join');
   }
   const { 
@@ -62,12 +62,14 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         
       const keys = Object.keys(req.body);
       for(var i=langIndex; i < keys.length; i++) {
-        await conn.query(
-          'INSERT INTO knows( \
-            job_seeker_id, lang_name, level) \
-          VALUES(?, ?, ?)',
-          [jobSeeker.insertId, keys[i], req.body[keys[i]]]
-        );
+        if(req.body[keys[i]]>0) {
+          await conn.query(
+            'INSERT INTO knows( \
+              job_seeker_id, lang_name, level) \
+            VALUES(?, ?, ?)',
+            [jobSeeker.insertId, keys[i], req.body[keys[i]]]
+          );
+        }
       }
       return res.redirect('/');
     }
