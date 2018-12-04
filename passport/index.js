@@ -27,9 +27,9 @@ module.exports = (passport) => {
                 }
                 else if(exClient.length) {
                     user.type = 'client';
-                }
-                done(null, user);
+                }                
                 conn.release();
+                done(null, user);
             }
             catch (err) {
                 conn.release();

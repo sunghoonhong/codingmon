@@ -19,6 +19,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
     }
   }
   if(!langFlag) {
+    conn.release();
     req.flash('joinError', '적어도 언어 하나는 하세요');
     return res.redirect('/join');
   }
@@ -38,13 +39,14 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         [id, id, id]
       );
       if (exUser.length) {
+        conn.release();
         req.flash('joinError', 'Already registered');
         return res.redirect('/join');
       }
       const [jobSeeker] = await conn.query(
         'INSERT INTO job_seeker(job_seeker_id) VALUES(NULL)'
       );
-      console.log(jobSeeker);
+      // console.log(jobSeeker);
       // const jobSeeker = await conn.query(
       //   'SELECT * FROM job_seeker ORDER BY job_seeker_id DESC LIMIT 1'
       // );
@@ -71,6 +73,7 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
           );
         }
       }
+      conn.release();
       return res.redirect('/');
     }
     catch (err) {

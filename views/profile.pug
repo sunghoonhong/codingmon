@@ -10,7 +10,7 @@ block content
           input#id(name='id' value=target.id required readonly)
         .input-group
           label(for='pw') 비밀번호
-          input#pw(name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
+          input#pw(type='password' name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
         .input-group
           label(for='name') 이름
           input#name(name='name' value=target.name required readonly)
@@ -20,6 +20,7 @@ block content
         .input-group
           label(for='rating') 평점
           input#rating(name='rating' value=target.rating required readonly)
+          
         if user.type == 'admin' || target.id == user.id
           button#update-profile.btn(type='button') 수정
           input#update-submit.btn(type='hidden' value='저장')

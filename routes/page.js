@@ -25,6 +25,7 @@ router.post('/join', isNotLoggedIn, async (req, res) => {
         const [langs]= await conn.query(
             'SELECT lang_name FROM program_lang'
         );
+        conn.release();
         res.render('join', {
             title: ' 회원가입 ' + req.body.joinType,
             user: req.user,
@@ -34,6 +35,7 @@ router.post('/join', isNotLoggedIn, async (req, res) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
     }
 });
@@ -75,6 +77,7 @@ router.get('/profile/:id', async (req, res, next) => {
             target = exClient[0];
             target.type = 'client';
         }
+        conn.release();
         // else{}
         res.render('profile', {
             title: req.params.id +'의 프로필',
@@ -85,6 +88,7 @@ router.get('/profile/:id', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -112,6 +116,7 @@ router.get('/request/:id', async (req, res, next) => {
         }
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -143,9 +148,11 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(sql + ' WHERE rqid=?', params);
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -158,9 +165,11 @@ router.post('/request/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM request WHERE rqid=?',
             req.body.targetId
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -182,11 +191,13 @@ router.get('/', async (req, res, next) => {
             }
             else {
                 console.error('No user type');
+                res.status(403).send('잘못된 접근입니다');
             }
         }
     }
     catch (err) {
         console.log(err);
+        next(err);
     }
 });
 

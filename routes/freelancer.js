@@ -27,6 +27,7 @@ router.get('/profile', isLoggedIn, async (req, res, next) => {
                 }
             }
         }
+        conn.release();
         res.render('profile', {
             title: '나의 프로필',
             user: req.user,
@@ -36,6 +37,7 @@ router.get('/profile', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -116,9 +118,11 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
                 );
             }
         }
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -131,9 +135,11 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM freelancer WHERE id=?',
             req.body.targetId
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -153,6 +159,7 @@ router.get('/request', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }

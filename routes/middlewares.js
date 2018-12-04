@@ -58,6 +58,7 @@ exports.isMgr = async (req, res, next) => {
             'SELECT * FROM team WHERE mgr_id=? AND tname=?',
             [req.user.id, tname]
         );
+        conn.release();
         if(exMgr) {
             next();
         }
@@ -66,6 +67,7 @@ exports.isMgr = async (req, res, next) => {
         }
     }
     catch (err) {
+        conn.release();
         console.log(req.params);
         console.error(err);
         res.status(403).send('Query error');

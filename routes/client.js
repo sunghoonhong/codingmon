@@ -41,9 +41,11 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
         await conn.query(
             sql, params       
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -56,9 +58,11 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM client WHERE id=?',
             req.body.targetId
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -78,6 +82,7 @@ router.get('/request', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
