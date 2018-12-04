@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  h2 팀 관리
+  table
+    thead
+      tr
+        th 팀 이름
+        th 팀장 ID
+        th 팀원 수
+    tbody
+      for team in teams
+        tr
+          td
+            a(href=`/admin/team/${team.tname}`)= team.tname 
+          td
+            a(href=`/admin/team/profile/${team.mgr_id}`)= team.mgr_id
+          td= team.people_num

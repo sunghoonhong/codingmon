@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h2 팀 목록
+  table
+    thead
+      tr
+        th 팀 이름
+    tbody
+      for team in teams
+        tr
+          td
+            a(href=`/team/${team.tname}`)= team.tname

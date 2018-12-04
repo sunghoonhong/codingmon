@@ -150,6 +150,57 @@ router.post('/lang/delete', isAdmin, async (req, res, next) => {
         next(err);
     }
 });
+
+router.get('/team', isAdmin, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [teams] = await conn.query('SELECT * FROM team');
+        res.render('admin_team_list', {
+            title: '팀 관리 - 관리자 모드',
+            user: req.user,
+            teams: teams
+        });
+        conn.release();
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.get('/team/:tname', isAdmin, async (req, res, next) => {
+    const tname = req.params.tname;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[team]] = await conn.query(
+            'SELECT * FROM team WHERE tname=?', tname
+        );
+        if(!team) {
+            res.render('alert', {
+                title: '경고 메시지',
+                message: '그런 팀은 없습니다'
+            });
+        }
+        const [members] = await conn.query(
+            'SELECT fid FROM participates WHERE tname=?',
+            tname
+        );
+        res.render('team_profile', {
+            title: '팀 관리 - 관리자 모드',
+            user: req.user,
+            team: team,
+            members: members
+        });
+        conn.release();
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
 router.get('/', isAdmin, async (req, res, next) => {
     try {
         res.render('main', {
