@@ -105,6 +105,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
         }
         for(var i=langIndex; i < keys.length; i++) {
             if(req.body[keys[i]] > 0) {
+                // 이미 있으면 UPDATE, 없으면 INSERT 하는 코드
                 await conn.query(
                     'INSERT INTO knows (job_seeker_id, lang_name, level) \
                     VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',

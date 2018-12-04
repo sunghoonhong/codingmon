@@ -90,48 +90,46 @@ router.get('/request', async (req, res, next) => {
 
 
 router.get('/request/:rqid', async (req, res, next) => {
+    res.redirect('/request/'+req.params.rqid);
+})
+
+router.get('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [request] = await conn.query(
-            'SELECT * FROM request WHERE rqid=?',
-            req.params.rqid
+        const [langs] = await conn.query(
+            'SELECT lang_name FROM program_lang'
         );
-        conn.release()
-        if(!request.length) {
-            console.log('해당 의뢰가 없습니다');
-            res.redirect('/');
-        }
-        else {
-            res.render('request_detail', {
-                title: '나의 의뢰',
-                user: req.user,
-                target: req.user,
-                request: request[0]
-            });
-        }
+        conn.release();
+        res.render('register', {
+            title: '의뢰 등록',
+            user: req.user,
+            langs: langs,
+            regError: req.flash('regError')
+        });
     }
     catch (err) {
         conn.release();
-        console.error('Query Error');
+        next(err);
     }
-})
-
-router.get('/register', isClient, (req, res) => {
-    res.render('register', {
-        title: '의뢰 등록',
-        user: req.user,
-        regError: req.flash('regError')
-    });
 });
 
-router.post('/register', isClient, async (req, res) => {
+router.post('/register', isClient, async (req, res, next) => {
     const { 
         rname, reward, start_date, end_date,
         min_people, max_people, min_career
-    } = req.body;
+    } = req.body;   // 기본정보는 7개
+    try {
+        if(min_people > max_people && start_date > end_date) {
+            req.flash('regError', '입력이 이상합니다');
+            res.redirect('/client/register');
+        }
+    }
+    catch (err) {
+        next(err);
+    }
     const conn = await pool.getConnection(async conn => conn);
     try {
-        await conn.query(
+        const [request] = await conn.query(
             'INSERT INTO request(   \
                 cid, rname, reward, start_date, end_date,   \
                 min_people, max_people, min_career  \
@@ -139,6 +137,16 @@ router.post('/register', isClient, async (req, res) => {
             [req.user.id, rname, reward, start_date, end_date,
             min_people, max_people, min_career]
         );
+        var keys = Object.keys(req.body);
+        for(var i=7; i<keys.length; i++) {
+            if(req.body[keys[i]]) {
+                await conn.query(
+                    'INSERT INTO requires(rqid, lang_name, level) \
+                    VALUES(?, ?, ?)',
+                    [request.insertId, keys[i], req.body[keys[i]]]
+                );
+            }
+        }
         conn.release();
         res.redirect('/');
     }

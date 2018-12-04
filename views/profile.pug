@@ -41,13 +41,13 @@ block content
           input#phone_num(name='phone_num' value=target.phone_num required readonly)
         .input-group
           label(for='age') 나이
-          input#age(name='age' value=target.age required readonly)
+          input#age(type='number' min=0 name='age' value=target.age required readonly)
         .input-group
           label(for='major') 전공
           input#major(name='major' value=target.major required readonly)  
         .input-group
           label(for='career') 경력
-          input#career(name='career' value=target.career required readonly)
+          input#career(type='number' min=0 name='career' value=target.career required readonly)
         .input-group
           label(for='rating') 평점
           input#rating(name='rating' value=target.rating required readonly)

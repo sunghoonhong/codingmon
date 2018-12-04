@@ -94,30 +94,35 @@ router.get('/profile/:id', async (req, res, next) => {
     }
 })
 
-router.get('/request/:id', async (req, res, next) => {
+router.get('/request/:rqid', async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
     try {
-        const conn = await pool.getConnection(async conn => conn);
-        try {
-            const [request] = await conn.query(
-                'SELECT * FROM request WHERE rqid=?',
-                req.params.id
-            );
-            conn.release();
-            res.render('request_detail', {
-                title: '의뢰 정보',
-                user: req.user,
-                request: request[0],
-                tableName: req.params.id + '번 의뢰'
-            });
+        const [request] = await conn.query(
+            'SELECT * FROM request WHERE rqid=?',
+            req.params.rqid
+        );
+        if(!request.length) {
+            conn.release()
+            console.log('해당 의뢰가 없습니다');
+            res.redirect('/');
         }
-        catch (err) {
-            conn.release();
-            next(err);
-        }
+        const [requires] = await conn.query(
+            'SELECT lang_name, level FROM requires WHERE rqid=?',
+            req.params.rqid
+        );
+        conn.release();
+        console.log(requires);
+        res.render('request_detail', {
+            title: '나의 의뢰',
+            user: req.user,
+            target: req.user,
+            request: request[0],
+            requires: requires
+        });        
     }
     catch (err) {
         conn.release();
-        console.error(err);
+        console.error('Query Error');
         next(err);
     }
 });
@@ -127,7 +132,18 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
         rqid, cid, rname,
         reward, min_people, max_people, min_career,
         start_date, end_date, dev_start, dev_end
-    } = req.body;
+    } = req.body;   // 기본 정보 11개
+    try {
+        if(start_date > end_date || min_people > max_people) {
+            return res.render('alert', {
+                title: '에러',
+                message: '입력이 이상합니다'
+            });
+        }
+    }
+    catch (err) {
+        next(err);
+    }
     var sql = 'UPDATE request  \
                 SET rname=?, reward=?, min_people=?, \
                 max_people=?, min_career=?, \
@@ -148,6 +164,14 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(sql + ' WHERE rqid=?', params);
+        var keys = Object.keys(req.body);
+        for(var i=11; i<keys.length; ++i) {
+            await conn.query(
+                'INSERT INTO requires (rqid, lang_name, level) \
+                VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
+                [rqid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+            );
+        }
         conn.release();
         res.redirect('/');
     }
@@ -161,6 +185,7 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
 router.post('/request/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        console.log(req.body.targetId);
         await conn.query(
             'DELETE FROM request WHERE rqid=?',
             req.body.targetId
@@ -170,6 +195,7 @@ router.post('/request/delete', isAdmin, async (req, res, next) => {
     }
     catch (err) {
         conn.release();
+        console.error(err);
         next(err);
     }
 });
