@@ -96,17 +96,25 @@ router.get('/request/:rqid/apply', async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const[applys] = await conn.query(
-            `SELECT f.id, f.career, f.rating,'skill','portfolio', 'waiting' as status
+        const[freelancers] = await conn.query(
+            `SELECT f.*
             FROM request req, freelancer f, job_seeker j, applys a
-            WHERE req.rqid =? and a.rqid = req.rqid and j.job_seeker_id = a.job_seeker_id
-            and f.job_seeker_id = a.job_seeker_id and a.status ='waiting'`,
+            WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
+            AND f.job_seeker_id = a.job_seeker_id AND a.status ='waiting'`,
             rqid
+        );
+        const[teams] = await conn.query(
+            `SELECT t.*
+            FROM request req, team t, job_seeker j, applys a
+            WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
+            AND t.job_seeker_id = a.job_seeker_id AND a.status ='waiting'`
+            , rqid
         );
         res.render('client_applys', {
             title: '신청자 목록',
             user: req.user,
-            applys: applys
+            freelancers: freelancers,
+            teams: teams
         });
     }
     catch (err) {

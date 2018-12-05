@@ -6,10 +6,6 @@ block content
     thead
       tr
         th ID
-        th 이름
-        th 휴대폰
-        th 나이
-        th 전공
         th 경력
         th 평점
     tbody
@@ -17,10 +13,19 @@ block content
         tr
           td
             a(href='/profile/'+freelancer.id)= freelancer.id
-          td= freelancer.name
-          td= freelancer.phone_num
-          td= freelancer.age
-          td= freelancer.major
           td= freelancer.career
           td= freelancer.rating
   h2 팀
+  table
+    thead
+      tr
+        th 팀이름
+        th 팀경력
+        th 팀평점
+    tbody
+      for team in teams
+        tr
+          td= team.tname
+            a(href=`/team/profile/${team.tname}`)= team.tname
+          td= team.career
+          td= team.rating
