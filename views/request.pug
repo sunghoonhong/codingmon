@@ -41,7 +41,15 @@ block content
           td= format(request.dev_end)
           if user
             if user.type=='client'
-              td 목록버튼
+              td
+                form(action='/client/apply' method='post')
+                  input(type='hidden' name='rqid' value=request.rqid)
+                  button.btn(type='submit') 확인
               //- TODO!!
             else if user.type=='freelancer'
-              td 신청하기
+              td
+                form(action='/freelancer/apply' method='post')
+                  input(type='hidden' name='rqid' value=request.rqid)
+                  button.btn(type='submit') 신청
+  if applyError
+    .error-message= applyError  

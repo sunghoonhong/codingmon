@@ -141,12 +141,15 @@ router.get('/request', async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            'SELECT * FROM request'
+            `SELECT rq.rqid, rq.rname, c.id as cid, rq.start_date, rq.end_date, 
+            rq.min_people, rq.max_people, rq.reward, rq.min_career, now() as now, '1'
+            FROM request rq, client c
+            WHERE rq.cid = c.id AND rq.dev_start IS NULL
+            AND rq.start_date <= now() AND now() <= rq.end_date;`
         );
         conn.release();
-
         res.render('request', {
-            title: '의뢰 목록',
+            title: '구인 중인 의뢰 목록',
             user: req.user,
             requests: requests
         });
