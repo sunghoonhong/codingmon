@@ -67,18 +67,22 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
     }
 });
 
-router.get('/request', async (req, res, next) => {
+router.get('/request', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            'SELECT * FROM request'
+            `SELECT * FROM request WHERE cid=?
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
         );
         conn.release();
 
-        res.render('request', {
-            title: '의뢰 목록',
+        res.render('client_request', {
+            title: '내 의뢰 목록',
             user: req.user,
-            requests: requests
+            requests: requests,
+            orderType: req.query.orderType
         });
     }
     catch (err) {
