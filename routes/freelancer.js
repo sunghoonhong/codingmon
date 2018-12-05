@@ -150,7 +150,7 @@ router.get('/request', async (req, res, next) => {
             ORDER BY rq.${req.query.orderType};`
         );
         conn.release();
-        res.render('request', {
+        res.render('freelancer_request', {
             title: '구인 중인 의뢰 목록',
             user: req.user,
             requests: requests,
@@ -164,7 +164,7 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
-router.post('/request/apply', isLoggedIn, async (req, res, next) => {
+router.post('/apply', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(
@@ -176,6 +176,7 @@ router.post('/request/apply', isLoggedIn, async (req, res, next) => {
     }
     catch (err) {
         req.flash('applyError', '이미 지원했습니다');
+        conn.release();
         console.error(err);
         res.redirect('/');
     }
