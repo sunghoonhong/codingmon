@@ -150,7 +150,7 @@ router.get('/request', async (req, res, next) => {
             ORDER BY rq.${req.query.orderType};`
         );
         conn.release();
-        res.render('request', {
+        res.render('freelancer_request', {
             title: '구인 중인 의뢰 목록',
             user: req.user,
             requests: requests,
@@ -164,7 +164,7 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
-router.post('/request/apply', isLoggedIn, async (req, res, next) => {
+router.post('/apply', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(
@@ -176,11 +176,58 @@ router.post('/request/apply', isLoggedIn, async (req, res, next) => {
     }
     catch (err) {
         req.flash('applyError', '이미 지원했습니다');
+        conn.release();
         console.error(err);
         res.redirect('/');
     }
 });
-// router.get('/waiting')
+
+router.get('/waiting', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT R.rqid, R.rname, C.name, R.start_date, R.reward, A.status
+            FROM request R,client C,freelancer F, job_seeker J, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
+            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid
+            AND F.id=?`, req.user.id
+        );
+        console.log(requests);
+        res.render('freelancer_waiting', {
+            title: '내가 신청한 의뢰',
+            user: req.user,
+            requests: requests
+        });
+    }
+    catch (err) {
+        console.error(err);
+        next(err);
+    }
+});
+
+router.get('/working', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
+            FROM request R,client C,freelancer F, job_seeker J, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
+            AND J.job_seeker_id = A.job_seeker_id AND F.id=?
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end is null`,
+            req.user.id
+        );
+        // console.log(requests);
+        res.render('freelancer_working', {
+            title: '진행 중인 의뢰',
+            user: req.user,
+            requests: requests
+        });
+    }
+    catch (err) {
+        console.error(err);
+        next(err);
+    }
+});
 
 router.get('/', async (req, res, next) => {
     try {

@@ -1,0 +1,20 @@
+extends layout
+
+block content
+  h2 진행중인 의뢰 목록
+
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+    for request in requests
+      tr
+        td
+          a(href=`/request/${request.rqid}`)= request.rqid
+        td= request.cid
+        td= request.rname
+        td= format(request.dev_start)
+        td= request.reward

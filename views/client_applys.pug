@@ -1,26 +1,44 @@
 extends layout
 
 block content
+  h2= `${rqid}번 의뢰 신청자 목록`
+
+  if applyError
+    .error-message= applyError
   h2 프리랜서
   table
     thead
       tr
         th ID
-        th 이름
-        th 휴대폰
-        th 나이
-        th 전공
         th 경력
         th 평점
+        th 선택
     tbody
       for freelancer in freelancers
         tr
           td
             a(href='/profile/'+freelancer.id)= freelancer.id
-          td= freelancer.name
-          td= freelancer.phone_num
-          td= freelancer.age
-          td= freelancer.major
           td= freelancer.career
           td= freelancer.rating
+          td
+            form(action=`/client/request/${rqid}/apply` method='post')
+              input(type='hidden' name='job_seeker_id' value=freelancer.job_seeker_id)
+              button.btn(type='submit') 선택
   h2 팀
+  table
+    thead
+      tr
+        th 팀이름
+        th 팀경력
+        th 팀평점
+    tbody
+      for team in teams
+        tr
+          td= team.tname
+            a(href=`/team/profile/${team.tname}`)= team.tname
+          td= team.career
+          td= team.rating
+          td
+            form(action=`/client/request/${rqid}/apply` method='post')
+              input(type='hidden' name='job_seeker_id' value=team.job_seeker_id)
+              button.btn(type='submit') 선택

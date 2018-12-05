@@ -22,8 +22,7 @@ block content
     thead
       tr
         th 의뢰 번호
-        unless user && user.type=='client'
-          th 의뢰자 ID
+        th 의뢰자 ID
         th 의뢰 제목
         th 의뢰 금액
         th 의뢰 시작날짜
@@ -31,20 +30,13 @@ block content
         th 최소 인원
         th 최대 인원
         th 최소 경력
-        th 개발 시작날짜
-        th 개발 종료날짜
-        if user
-          if user.type=='client'
-            th 신청자
-          else if user.type=='freelancer'
-            th 신청하기
+        th 신청하기
     tbody
       for request in requests
         tr
           td
             a(href='/request/'+request.rqid)= request.rqid
-          unless user && user.type=='client'
-            td= request.cid
+          td= request.cid
           td= request.rname
           td= request.reward
           td= format(request.start_date)
@@ -52,17 +44,9 @@ block content
           td= request.min_people
           td= request.max_people
           td= request.min_career
-          td= format(request.dev_start)
-          td= format(request.dev_end)
-          if user
-            if user.type=='client'
-              td
-                a.btn(href=`/client/request/${request.rqid}/apply`)
-              //- TODO!!
-            else if user.type=='freelancer'
-              td
-                form(action='/freelancer/apply' method='post')
-                  input(type='hidden' name='rqid' value=request.rqid)
-                  button.btn(type='submit') 신청
+          td
+            form(action='/freelancer/apply' method='post')
+              input(type='hidden' name='rqid' value=request.rqid)
+              button.btn(type='submit') 신청
   if applyError
     .error-message= applyError  
