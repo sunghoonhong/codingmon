@@ -104,20 +104,12 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
             jsid = jsid.job_seeker_id;
         }
         for(var i=langIndex; i < keys.length; i++) {
-            if(req.body[keys[i]] > 0) {
                 // 이미 있으면 UPDATE, 없으면 INSERT 하는 코드
-                await conn.query(
-                    'INSERT INTO knows (job_seeker_id, lang_name, level) \
-                    VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
-                    [jsid, keys[i], req.body[keys[i]], req.body[keys[i]]]
-                );
-            }
-            else if(req.body[keys[i]] == 0) {
-                await conn.query(
-                    'DELETE FROM knows WHERE job_seeker_id=? AND lang_name=?',
-                    [jsid, keys[i]]
-                );
-            }
+            await conn.query(
+                'INSERT INTO knows (job_seeker_id, lang_name, level) \
+                VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
+                [jsid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+            );
         }
         conn.release();
         res.redirect('/');

@@ -54,8 +54,6 @@ block content
         
         h3 프로그래밍 언어별 능숙도
         for lang in langs
-          if user.type == 'client' && lang.level=='0'
-            - continue
           .input-group
             label(for=lang.lang_name)= lang.lang_name
             input(type='number' min='0' max='5' id=lang.lang_name name=lang.lang_name value=lang.level required readonly)

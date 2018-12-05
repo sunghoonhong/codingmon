@@ -60,18 +60,6 @@ router.get('/profile/:id', async (req, res, next) => {
                 WHERE job_seeker_id=?',
                 target.job_seeker_id
             );
-            var [langs] = await conn.query(
-                'SELECT lang_name FROM program_lang'
-            );
-            for(var i=0; i<langs.length; ++i) {
-                langs[i].level = 0;
-                for(var j=0; j<knows.length; ++j) {
-                    if(langs[i].lang_name == knows[j].lang_name) {
-                        langs[i].level = knows[j].level;
-                        break;
-                    }
-                }
-            }
         }
         else if(exClient.length) {
             target = exClient[0];
@@ -83,7 +71,7 @@ router.get('/profile/:id', async (req, res, next) => {
             title: req.params.id +'의 프로필',
             user: req.user,
             target: target,
-            langs: langs,
+            langs: knows,
             updateError: req.flash('updateError')
         });
     }

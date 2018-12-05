@@ -64,14 +64,12 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
         
       const keys = Object.keys(req.body);
       for(var i=langIndex; i < keys.length; i++) {
-        if(req.body[keys[i]]>0) {
-          await conn.query(
-            'INSERT INTO knows( \
-              job_seeker_id, lang_name, level) \
-            VALUES(?, ?, ?)',
-            [jobSeeker.insertId, keys[i], req.body[keys[i]]]
-          );
-        }
+        await conn.query(
+          'INSERT INTO knows( \
+            job_seeker_id, lang_name, level) \
+          VALUES(?, ?, ?)',
+          [jobSeeker.insertId, keys[i], req.body[keys[i]]]
+        );
       }
       conn.release();
       return res.redirect('/');
