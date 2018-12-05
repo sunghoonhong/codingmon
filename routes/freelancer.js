@@ -161,6 +161,22 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
+router.post('/request/apply', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `INSERT INTO applys(rqid, job_seeker_id) VALUES(?, ?)`,
+            [req.body.rqid, req.user.job_seeker_id]
+        );
+        conn.release();
+        res.redirect('/');
+    }
+    catch (err) {
+        req.flash('applyError', '이미 지원했습니다');
+        console.error(err);
+        res.redirect('/');
+    }
+});
 // router.get('/waiting')
 
 router.get('/', async (req, res, next) => {

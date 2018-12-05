@@ -42,9 +42,7 @@ block content
           if user
             if user.type=='client'
               td
-                form(action='/client/apply' method='post')
-                  input(type='hidden' name='rqid' value=request.rqid)
-                  button.btn(type='submit') 확인
+                a.btn(href=`/client/request/${request.rqid}/apply`)
               //- TODO!!
             else if user.type=='freelancer'
               td
