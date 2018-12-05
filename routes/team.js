@@ -21,6 +21,7 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
             'SELECT fid FROM participates WHERE tname=?',
             tname
         );
+        conn.release();
         res.render('team_profile', {
             title: '팀 정보',
             user: req.user,
@@ -29,6 +30,7 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -45,12 +47,15 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
             [tname, banId]
         );
         // 인원수, 경력, 능숙도 업데이트 필요
+        
+        conn.release();
         if(req.user.type=='admin')
             res.redirect('/admin/team');
         else
             res.redirect(`/team/${tname}`);
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -65,12 +70,14 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
             'DELETE FROM team WHERE tname=?',
             req.body.tname
         );
+        conn.release();
         if(req.user.type=='admin')
             res.redirect('/admin/team');
         else
             res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -84,6 +91,7 @@ router.get('/list', isLoggedIn, async(req, res, next) => {
             'SELECT * FROM team WHERE mgr_id=?',
             req.user.id
         );
+        conn.release();
         res.render('team_list', {
             title: '나의 팀 목록',
             user: req.user,
@@ -91,6 +99,7 @@ router.get('/list', isLoggedIn, async(req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -200,9 +209,11 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
                 );
             }
         }
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }

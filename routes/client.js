@@ -41,9 +41,11 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
         await conn.query(
             sql, params       
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -56,9 +58,11 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM client WHERE id=?',
             req.body.targetId
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -78,55 +82,75 @@ router.get('/request', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
 });
 
-
 router.get('/request/:rqid', async (req, res, next) => {
+    res.redirect('/request/'+req.params.rqid);
+})
+
+router.get('/request/:rqid/apply', async (req, res, next) => {
+    const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [request] = await conn.query(
-            'SELECT * FROM request WHERE rqid=?',
-            req.params.rqid
+        const[applys] = await conn.query(
+            `SELECT f.id, f.career, f.rating,'skill','portfolio', 'waiting' as status
+            FROM request req, freelancer f, job_seeker j, applys a
+            WHERE req.rqid =? and a.rqid = req.rqid and j.job_seeker_id = a.job_seeker_id
+            and f.job_seeker_id = a.job_seeker_id and a.status ='waiting'`,
+            rqid
         );
-        conn.release()
-        if(!request.length) {
-            console.log('해당 의뢰가 없습니다');
-            res.redirect('/');
-        }
-        else {
-            res.render('request_detail', {
-                title: '나의 의뢰',
-                user: req.user,
-                target: req.user,
-                request: request[0]
-            });
-        }
+        res.render('client_applys', {
+            title: '신청자 목록',
+            user: req.user,
+            applys: applys
+        });
     }
     catch (err) {
-        conn.release();
-        console.error('Query Error');
+        next(err);
     }
 })
 
-router.get('/register', isClient, (req, res) => {
-    res.render('register', {
-        title: '의뢰 등록',
-        user: req.user,
-        regError: req.flash('regError')
-    });
+router.get('/register', isClient, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [langs] = await conn.query(
+            'SELECT lang_name FROM program_lang'
+        );
+        conn.release();
+        res.render('register', {
+            title: '의뢰 등록',
+            user: req.user,
+            langs: langs,
+            regError: req.flash('regError')
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
 });
 
-router.post('/register', isClient, async (req, res) => {
+router.post('/register', isClient, async (req, res, next) => {
     const { 
         rname, reward, start_date, end_date,
         min_people, max_people, min_career
-    } = req.body;
+    } = req.body;   // 기본정보는 7개
+    try {
+        if(min_people > max_people && start_date > end_date) {
+            req.flash('regError', '입력이 이상합니다');
+            res.redirect('/client/register');
+        }
+    }
+    catch (err) {
+        next(err);
+    }
     const conn = await pool.getConnection(async conn => conn);
     try {
-        await conn.query(
+        const [request] = await conn.query(
             'INSERT INTO request(   \
                 cid, rname, reward, start_date, end_date,   \
                 min_people, max_people, min_career  \
@@ -134,6 +158,16 @@ router.post('/register', isClient, async (req, res) => {
             [req.user.id, rname, reward, start_date, end_date,
             min_people, max_people, min_career]
         );
+        var keys = Object.keys(req.body);
+        for(var i=7; i<keys.length; i++) {
+            if(req.body[keys[i]]) {
+                await conn.query(
+                    'INSERT INTO requires(rqid, lang_name, level) \
+                    VALUES(?, ?, ?)',
+                    [request.insertId, keys[i], req.body[keys[i]]]
+                );
+            }
+        }
         conn.release();
         res.redirect('/');
     }

@@ -27,6 +27,7 @@ router.get('/profile', isLoggedIn, async (req, res, next) => {
                 }
             }
         }
+        conn.release();
         res.render('profile', {
             title: '나의 프로필',
             user: req.user,
@@ -36,6 +37,7 @@ router.get('/profile', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -102,23 +104,18 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
             jsid = jsid.job_seeker_id;
         }
         for(var i=langIndex; i < keys.length; i++) {
-            if(req.body[keys[i]] > 0) {
-                await conn.query(
-                    'INSERT INTO knows (job_seeker_id, lang_name, level) \
-                    VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
-                    [jsid, keys[i], req.body[keys[i]], req.body[keys[i]]]
-                );
-            }
-            else if(req.body[keys[i]] == 0) {
-                await conn.query(
-                    'DELETE FROM knows WHERE job_seeker_id=? AND lang_name=?',
-                    [jsid, keys[i]]
-                );
-            }
+                // 이미 있으면 UPDATE, 없으면 INSERT 하는 코드
+            await conn.query(
+                'INSERT INTO knows (job_seeker_id, lang_name, level) \
+                VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
+                [jsid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+            );
         }
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -131,9 +128,11 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM freelancer WHERE id=?',
             req.body.targetId
         );
+        conn.release();
         res.redirect('/');
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -142,22 +141,42 @@ router.get('/request', async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            'SELECT * FROM request'
+            `SELECT rq.rqid, rq.rname, c.id as cid, rq.start_date, rq.end_date, 
+            rq.min_people, rq.max_people, rq.reward, rq.min_career, now() as now, '1'
+            FROM request rq, client c
+            WHERE rq.cid = c.id AND rq.dev_start IS NULL
+            AND rq.start_date <= now() AND now() <= rq.end_date;`
         );
         conn.release();
-
         res.render('request', {
-            title: '의뢰 목록',
+            title: '구인 중인 의뢰 목록',
             user: req.user,
             requests: requests
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
 });
 
+router.post('/request/apply', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `INSERT INTO applys(rqid, job_seeker_id) VALUES(?, ?)`,
+            [req.body.rqid, req.user.job_seeker_id]
+        );
+        conn.release();
+        res.redirect('/');
+    }
+    catch (err) {
+        req.flash('applyError', '이미 지원했습니다');
+        console.error(err);
+        res.redirect('/');
+    }
+});
 // router.get('/waiting')
 
 router.get('/', async (req, res, next) => {

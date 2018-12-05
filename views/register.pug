@@ -1,22 +1,43 @@
 extends layout
 
 block content
-  - 
-    const index = {
-      'rname': ['의뢰 제목', 'text'],
-      'reward': ['의뢰 보상', 'number'],
-      'start_date': ['의뢰 시작날짜', 'date'],
-      'end_date': ['의뢰 종료날짜', 'date'],
-      'min_people': ['최소 인원', 'number'],
-      'max_people': ['최대 인원', 'number'],
-      'min_career': ['최소 경력', 'number']
-    };
+  //- - 
+    //- const index = {
+    //-   'rname': ['의뢰 제목', 'text'],
+    //-   'reward': ['의뢰 보상', 'number'],
+    //-   'start_date': ['의뢰 시작날짜', 'date'],
+    //-   'end_date': ['의뢰 종료날짜', 'date'],
+    //-   'min_people': ['최소 인원', 'number'],
+    //-   'max_people': ['최대 인원', 'number'],
+    //-   'min_career': ['최소 경력', 'number']
+    //- };
 
   form#join-form(action='/client/register' method='post')
-    for label, key in index
+    .input-group
+      label(for='rname') 의뢰 제목
+      input#rname(name='rname' required)
+    .input-group
+      label(for='reward') 의뢰 보상
+      input#reward(type='number' min=0 name='reward' required)
+    .input-group
+      label(for='start_date') 의뢰 시작날짜
+      input#start_date(type='date' name='start_date' required)
+    .input-group
+      label(for='end_date') 의뢰 종료날짜
+      input#end_date(type='date' name='end_date' required)
+    .input-group
+      label(for='min_people') 최소 인원
+      input#min_people(type='number' min=0 name='min_people' required)
+    .input-group
+      label(for='max_people') 최대 인원
+      input#max_people(type='number' min=0 name='max_people' required)
+    .input-group
+      label(for='min_career') 최소 경력
+      input#min_career(type='number' min=0 name='min_career' required)
+    for lang in langs
       .input-group
-        label(for=key)= label[0]
-        input(type=label[1] id=key name=key required)
+        label(for=lang.lang_name)= lang.lang_name
+        input(id=lang.lang_name name=lang.lang_name type='number' min=0 max=5 value=0)
     button.btn(type='submit') 등록
     if regError
       .error-message= regError

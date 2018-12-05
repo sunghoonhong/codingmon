@@ -23,21 +23,4 @@ block content
           td= freelancer.major
           td= freelancer.career
           td= freelancer.rating
-
-  h2 의뢰자
-  table
-    thead
-      tr
-        th ID
-        th 이름
-        th 휴대폰
-        th 평점
-    tbody
-      for client in clients
-        tr
-          td
-            a(href='/profile/'+client.id)= client.id
-          td= client.name
-          td= client.phone_num
-          td= client.rating
-
+  h2 팀

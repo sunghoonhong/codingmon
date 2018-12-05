@@ -31,6 +31,7 @@ router.get('/user', isAdmin, async (req, res, next) => {
         }
     }
     catch(err) {
+        conn.release();
         console.log(err);
         next(err);
     }
@@ -56,6 +57,7 @@ router.get('/request', isAdmin, async (req, res, next) => {
         }
     }
     catch (err) {
+        conn.release();
         next(err);
     }
 });
@@ -82,6 +84,7 @@ router.get('/lang', isAdmin, async (req, res, next) => {
         }
     }
     catch(err) {
+        conn.release();
         console.log(err);
         next(err);
     }
@@ -115,6 +118,7 @@ router.post('/lang', isAdmin, async (req, res, next) => {
         }
     }
     catch(err) {
+        conn.release();
         console.log(err);
         next(err);
     }
@@ -146,6 +150,7 @@ router.post('/lang/delete', isAdmin, async (req, res, next) => {
         }
     }
     catch(err) {
+        conn.release();
         console.log(err);
         next(err);
     }
@@ -186,13 +191,13 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
             'SELECT fid FROM participates WHERE tname=?',
             tname
         );
+        conn.release();
         res.render('team_profile', {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
             team: team,
             members: members
         });
-        conn.release();
     }
     catch (err) {
         conn.release();

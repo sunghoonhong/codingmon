@@ -17,16 +17,16 @@ block content
       input#rname(name='rname' value=request.rname required readonly)
     .input-group
       label(for='reward') 의뢰 보상
-      input#reward(type='number' name='reward' value=request.reward required readonly)
+      input#reward(type='number' min=0 name='reward' value=request.reward required readonly)
     .input-group
       label(for='min_people') 최소 인원
-      input#min_people(type='number' name='min_people' value=request.min_people required readonly)
+      input#min_people(type='number' min=0 name='min_people' value=request.min_people required readonly)
     .input-group
       label(for='max_people') 최대 인원
-      input#max_people(type='number' name='max_people' value=request.max_people required readonly)
+      input#max_people(type='number' min=0 name='max_people' value=request.max_people required readonly)
     .input-group
       label(for='min_career') 최소 경력
-      input#min_career(type='number' name='min_career' value=request.min_career required readonly)
+      input#min_career(type='number' min=0 name='min_career' value=request.min_career required readonly)
     .input-group
       label(for='start_date') 의뢰 시작날짜
       input#start_date(type='date' name='start_date' value=format(request.start_date) required readonly)
@@ -45,13 +45,20 @@ block content
         input#dev_end(type='date' name='dev_end' value=format(request.dev_end) readonly)
       else
         input#dev_end(type='date' name='dev_end' readonly)
+    h3 프로그래밍 언어별 요구 능숙도
+    for require in requires
+      .input-group
+        label(for=require.lang_name)= require.lang_name
+        input(type='number' min=0 max=5 id=require.lang_name name=require.lang_name value=require.level readonly)
 
     if user && user.type == 'admin'
       button#update-request.btn(type='button') 수정
       input#update-submit.btn(type='hidden' value='저장')
-      form(action='/request/delete', method='post')
-        input(type='hidden' name='targetId' value=request.rqid)
-        button.btn(type='submit') 삭제
+
+  if user && user.type == 'admin'
+    form(action='/request/delete', method='post')
+      input(type='hidden' name='targetId' value=request.rqid)
+      button.btn(type='submit') 삭제
 
 block script
   if user && user.type == 'admin'
@@ -62,6 +69,10 @@ block script
         if(toggleBtn.textContent == '취소') {
           return history.go(0);
         }
+        var requires = !{JSON.stringify(requires)};
+        requires.forEach((require => {
+          document.querySelector('#'+require.lang_name).toggleAttribute('readonly');
+        }))
         document.querySelector('#rname').toggleAttribute('readonly');
         document.querySelector('#reward').toggleAttribute('readonly');
         document.querySelector('#min_people').toggleAttribute('readonly');
@@ -71,7 +82,7 @@ block script
         document.querySelector('#end_date').toggleAttribute('readonly');
         document.querySelector('#dev_start').toggleAttribute('readonly');
         document.querySelector('#dev_end').toggleAttribute('readonly');
-        
         toggleBtn.textContent = toggleBtn.textContent=='수정' ? '취소' : '수정';
         submitBtn.type = toggleBtn.textContent=='수정' ? 'hidden' : 'submit';
       });
+      

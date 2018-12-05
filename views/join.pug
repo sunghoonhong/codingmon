@@ -14,7 +14,6 @@ block content
         if joinError
           .error-message= joinError
 
-
   else if joinType=='freelancer'
     h2= 'Freelancer Join'
     form#join-form(action='/auth/join/freelancer' method='post')
@@ -26,19 +25,19 @@ block content
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#pw(name='name' required)
+        input#name(name='name' required)
       .input-group
         label(for='phone_num') 휴대폰 번호
-        input#pw(name='phone_num' required)
+        input#phone_num(name='phone_num' required)
       .input-group
         label(for='age') 나이
-        input#pw(name='age' required)
+        input#age(type='number' min=0 name='age' required)
       .input-group
         label(for='major') 전공
-        input#pw(name='major' required)  
+        input#major(name='major' required)  
       .input-group
         label(for='career') 경력
-        input#pw(name='career' required)
+        input#career(type='number' min=0 name='career' required)
       h3 프로그래밍 언어별 능숙도
       for lang in langs
         .input-group
@@ -59,10 +58,10 @@ block content
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#pw(name='name' required)
+        input#name(name='name' required)
       .input-group
         label(for='phone_num') 휴대폰 번호
-        input#pw(name='phone_num' required)
+        input#phone_num(name='phone_num' required)
       button#join.btn(type='submit') 가입
-        if joinError
-          .error-message= joinError
+      if joinError
+        .error-message= joinError
