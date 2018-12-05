@@ -140,7 +140,7 @@ router.post('/request/:rqid/apply', async (req, res, next) => {
         );
         if(request.dev_start) {
             req.flash('applyError', '이미 선택된 의뢰입니다');
-            res.redirect(`/client/request/${rqid}/apply`);
+            return res.redirect(`/client/request/${rqid}/apply`);
         }
         // 수락한거 status = accepted
         await conn.query(
@@ -231,6 +231,32 @@ router.post('/register', isClient, async (req, res, next) => {
     }
 });
 
+router.get('/working', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT R.rqid, R.rname, R.dev_start, R.reward, F.id as fid
+            FROM request R,freelancer F, job_seeker J, applys A
+            WHERE R.cid = ? AND F.job_seeker_id = J.job_seeker_id 
+            AND J.job_seeker_id = A.job_seeker_id
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
+        );
+        // console.log(requests);
+        res.render('client_working', {
+            title: '진행 중인 의뢰',
+            user: req.user,
+            requests: requests,
+            orderType: req.query.orderType
+        });
+    }
+    catch (err) {
+        console.error(err);
+        next(err);
+    }
+});
 
 router.get('/', async (req, res, next) => {
     try {
