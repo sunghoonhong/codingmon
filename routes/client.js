@@ -104,27 +104,67 @@ router.get('/request/:rqid/apply', async (req, res, next) => {
             `SELECT f.*
             FROM request req, freelancer f, job_seeker j, applys a
             WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
-            AND f.job_seeker_id = a.job_seeker_id AND a.status ='waiting'`,
+            AND f.job_seeker_id = a.job_seeker_id`,
             rqid
         );
         const[teams] = await conn.query(
             `SELECT t.*
             FROM request req, team t, job_seeker j, applys a
             WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
-            AND t.job_seeker_id = a.job_seeker_id AND a.status ='waiting'`
-            , rqid
+            AND t.job_seeker_id = a.job_seeker_id`,
+            rqid
         );
+        conn.release();
         res.render('client_applys', {
             title: '신청자 목록',
             user: req.user,
             freelancers: freelancers,
-            teams: teams
+            teams: teams,
+            rqid: req.params.rqid,
+            applyError: req.flash('applyError')
         });
     }
     catch (err) {
+        conn.release();
         next(err);
     }
-})
+});
+
+router.post('/request/:rqid/apply', async (req, res, next) => {
+    const rqid = req.params.rqid;
+    const job_seeker_id = req.body.job_seeker_id;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[request]] = await conn.query(
+            `SELECT dev_start FROM request WHERE rqid=?`, rqid
+        );
+        if(request.dev_start) {
+            req.flash('applyError', '이미 선택된 의뢰입니다');
+            res.redirect(`/client/request/${rqid}/apply`);
+        }
+        // 수락한거 status = accepted
+        await conn.query(
+            `UPDATE request req, applys a, job_seeker j, freelancer f
+            SET a.status = 'accepted', req.dev_start = now()
+            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.job_seeker_id = j.job_seeker_id
+            AND j.job_seeker_id = f.job_seeker_id AND f.job_seeker_id = ?`,
+            [rqid, job_seeker_id]
+        );
+        // 나머지는 전부 status = decliend
+        await conn.query(
+            `UPDATE request req, applys a, job_seeker j, freelancer f SET a.status = 'declined'
+            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.status = 'waiting'`,
+            rqid
+        );
+        conn.release();
+        res.redirect('/')
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
 
 router.get('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
