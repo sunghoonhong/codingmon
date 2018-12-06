@@ -192,6 +192,7 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
             AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid
             AND F.id=?`, req.user.id
         );
+        conn.release();
         res.render('freelancer_waiting', {
             title: '내가 신청한 의뢰',
             user: req.user,
@@ -199,6 +200,7 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -215,6 +217,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
             AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end is null`,
             req.user.id
         );
+        conn.release();
         res.render('freelancer_working', {
             title: '진행 중인 의뢰',
             user: req.user,
@@ -223,6 +226,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -232,15 +236,27 @@ router.post('/report/submit', isLoggedIn, async (req, res, next) => {
     const { rfile, rqid } = req.body;
     const conn = await pool.getConnection(async conn => conn);
     try {
+        const [exWaiting] = await conn.query(
+            `SELECT * FROM report WHERE rqid=? AND job_seeker_id=? AND status='waiting'`,
+            [rqid, req.user.job_seeker_id]
+        );
+        if(exWaiting.length) {
+            conn.release();
+            req.flash('submitError', '완료신청 수락 대기중입니다');
+            return res.redirect('/freelancer/working');
+        }
+
         await conn.query(
             `INSERT INTO report(rfile, rqid, job_seeker_id)
             VALUES(?, ?, ?)`,
             [rfile, rqid, req.user.job_seeker_id]
         );
+        conn.release();
         res.redirect('/');
     }
     catch(err) {
         req.flash('submitError', '완료 신청 중 에러발생')
+        conn.release();
         console.error(err);
         next(err);
     }
