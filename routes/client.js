@@ -258,6 +258,33 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     }
 });
 
+router.get('/request/:rqid/complete', async (req, res, next) => {
+    const rqid = req.params.rqid;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const[reports] = await conn.query(
+            `SELECT f.id as fid, rep.rfile as rfile
+            FROM request req, freelancer f, report rep, client c, job_seeker j
+            WHERE req.rqid = ? AND req.rqid = rep.rqid 
+            and rep.status = 'waiting' and rep.job_seeker_id = j.job_seeker_id
+            and j.job_seeker_id = f.job_seeker_id`,
+            rqid
+        );
+        conn.release();
+        res.render('client_complete', {
+            title: '의뢰완료 요청',
+            user: req.user,
+            reports: reports,
+            rqid: req.params.rqid,
+            applyError: req.flash('applyError')
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
 router.get('/', async (req, res, next) => {
     try {
         res.render('main', {

@@ -25,6 +25,7 @@ block content
 			th 개발 시작날짜
 			th 의뢰 금액
 			th 신청자 ID
+			th 요청 확인
 		for request in requests
 			tr
 				td
@@ -33,3 +34,5 @@ block content
 				td= format(request.dev_start)
 				td= request.reward
 				td= request.fid
+				td
+					a.btn(href=`/client/request/${request.rqid}/complete`)

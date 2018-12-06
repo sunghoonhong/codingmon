@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h2= `${rqid}번 의뢰 완료 요청`
+
+  if applyError
+    .error-message= applyError
+  table
+    thead
+      tr
+        th 프리랜서 ID
+        th 결과 보고서
+        th 완료 요청
+    tbody
+        for report in reports
+            tr
+                td
+                    a(href='/profile/'+report.fid)= report.fid
+                td= report.rfile
+                td
+                    button.btn(type='submit') 수락
