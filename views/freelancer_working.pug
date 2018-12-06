@@ -5,6 +5,7 @@ block content
 
   if submitError
     .error-message= submitError
+  
   #submit-form
 
   table
@@ -28,20 +29,22 @@ block content
 
 block script
   script.
-    document.querySelector('.submit-btn').addEventListener('click', function(e) {
-      if(document.querySelector('#submit-group'))
+    document.querySelectorAll('.submit-btn').forEach(btn => { addEventListener('click', function(e) {
+      if(document.querySelector('#submit-group') || e.target != btn)
         return;
       var submitForm = document.createElement('form');
       var submitGroup = document.createElement('div');
       var rqidInput = document.createElement('input');
       var rfileInput = document.createElement('input');
       var submitBtn = document.createElement('button');
+      document.querySelector('#submit-form').innerText = e.target.dataset.rqid + '번 완료신청 결과보고서';
+
       submitForm.action = '/freelancer/report/submit';
       submitForm.method = 'post';
       
       submitGroup.class = 'input-group';
       submitGroup.id = 'submit-group';
-
+      
       rqidInput.type = 'hidden';
       rqidInput.name = 'rqid';
       rqidInput.value = e.target.dataset.rqid;
@@ -57,4 +60,4 @@ block script
       submitGroup.appendChild(submitBtn);
       submitForm.appendChild(submitGroup);
       document.querySelector('#submit-form').appendChild(submitForm);
-    });
+    })});
