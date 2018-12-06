@@ -66,6 +66,7 @@ block content
 
         h2 내적 포트폴리오
         h2 외적 포트폴리오
+        a.btn(href=`/freelancer/${target.id}/external`) 조회
 
     if user.type=='admin'
       form(action='/'+target.type+'/profile/delete', method='post')

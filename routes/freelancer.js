@@ -137,6 +137,34 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+router.get('/:id/external', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try{
+        const [externals] = await conn.query(
+            `SELECT * FROM owns_external WHERE fid=?`,
+            req.params.id
+        );
+        
+        conn.release();
+        res.render('external', {
+            title: '외부 포트폴리오 목록',
+            user: req.user,
+            targetId: req.params.id,
+            externals: externals
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+router.get('/:id/external/:file', (req, res, next) => {
+    return res.sendFile(`${req.params.file}`, {
+        root: `public/external/${req.params.id}/`
+    });
+});
+
 router.get('/request', async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);

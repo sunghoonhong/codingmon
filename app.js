@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const path = require('path');
 const passport = require('passport');
 const session = require('express-session');
+const multer = require('multer');
 const flash = require('connect-flash');
 require('dotenv').config();
 const dbconfig = require('./config/database');
@@ -15,6 +16,7 @@ const adminRouter = require('./routes/admin');
 const freelancerRouter = require('./routes/freelancer');
 const clientRouter = require('./routes/client');
 const teamRouter = require('./routes/team');
+
 const passportConfig = require('./passport');
 
 const app = express();
