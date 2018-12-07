@@ -1,10 +1,8 @@
 extends layout
 
 block content
-  h2= `${rqid}번 의뢰 완료 요청`
+  h2= `${rqid}번 의뢰에 대한 완료 요청`
 
-  if applyError
-    .error-message= applyError
   table
     thead
       tr
@@ -12,10 +10,10 @@ block content
         th 결과 보고서
         th 완료 요청
     tbody
-        for report in reports
-            tr
-                td
-                    a(href='/profile/'+report.fid)= report.fid
-                td= report.rfile
-                td
-                    button.btn(type='submit') 수락
+      for report in reports
+        tr
+          td= report.fid
+          td= report.rfile
+          td
+            button.btn(type='submit') 수락
+            a.btn(href=`/client/report/${report.rid}/decline`) 거부

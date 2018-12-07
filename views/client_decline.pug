@@ -1,0 +1,8 @@
+extends layout
+
+block content
+
+  h3 거부 사유
+  form(action=`/client/report/${rid}/decline` method='post')
+    input#message(name='message' placeholder='사유를 적으세요' required)
+    button.btn(type='submit') 전송

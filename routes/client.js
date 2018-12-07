@@ -236,7 +236,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            `SELECT R.rqid, R.rname, R.dev_start, R.reward, F.id as fid
+            `SELECT R.rqid, R.rname, R.start_date, R.dev_start, R.reward, F.id as fid
             FROM request R,freelancer F, job_seeker J, applys A
             WHERE R.cid = ? AND F.job_seeker_id = J.job_seeker_id 
             AND J.job_seeker_id = A.job_seeker_id
@@ -258,12 +258,12 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     }
 });
 
-router.get('/request/:rqid/complete', async (req, res, next) => {
+router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
     try {
         const[reports] = await conn.query(
-            `SELECT f.id as fid, rep.rfile as rfile
+            `SELECT f.id as fid, rep.rfile, rep.rid
             FROM request req, freelancer f, report rep, client c, job_seeker j
             WHERE req.rqid = ? AND req.rqid = rep.rqid 
             and rep.status = 'waiting' and rep.job_seeker_id = j.job_seeker_id
@@ -275,9 +275,45 @@ router.get('/request/:rqid/complete', async (req, res, next) => {
             title: '의뢰완료 요청',
             user: req.user,
             reports: reports,
-            rqid: req.params.rqid,
-            applyError: req.flash('applyError')
+            rqid: req.params.rqid
         });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
+    try {
+        res.render('client_decline', {
+            title: '요청 거부',
+            user: req.user,
+            rid: req.params.rid
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        // report status 를 declined로 업데이트
+        await conn.query(
+            `UPDATE report rep
+            SET rep.status = 'declined'
+            WHERE rep.rid = ?`,
+            req.params.rid
+        );
+        // declined에 추가
+        await conn.query(
+            `INSERT INTO declined VALUES (?, ?)`,
+            [req.params.rid, req.body.message]
+        );
+        return res.redirect('/');
     }
     catch (err) {
         conn.release();
