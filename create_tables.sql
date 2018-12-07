@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS codingmon;
 USE codingmon;
 
-CREATE TABLE IF NOT EXISTS administrator (
+CREATE TABLE IF NOT EXISTS admin (
     id VARCHAR(20) NOT NULL,
     password VARCHAR(20) NOT NULL,
     PRIMARY KEY (id)
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS job_seeker (
 
 CREATE TABLE IF NOT EXISTS freelancer (
     id VARCHAR(20) NOT NULL,
-    password VARCHAR(20) NOT NULL,
+    password VARCHAR(100) NOT NULL,
     name VARCHAR(20) NOT NULL,
     phone_num VARCHAR(11) NOT NULL,
     rating float(7,2),
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS participates (
 
 CREATE TABLE IF NOT EXISTS client (
     id VARCHAR(20) NOT NULL,
-    password VARCHAR(20) NOT NULL,
+    password VARCHAR(100) NOT NULL,
     name VARCHAR(20) NOT NULL,
     phone_num VARCHAR(11) NOT NULL,
     rating float(7,2),
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS requires (
 CREATE TABLE IF NOT EXISTS applys (
     rqid INT NOT NULL,
     job_seeker_id INT NOT NULL,
-    status INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
     PRIMARY KEY (rqid , job_seeker_id),
     FOREIGN KEY (rqid)
         REFERENCES request (rqid)
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS applys (
 
 CREATE TABLE IF NOT EXISTS report (
     rid INT NOT NULL AUTO_INCREMENT,
-    status INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
     rfile VARCHAR(100) NOT NULL,
     rqid INT NOT NULL,
     job_seeker_id INT NOT NULL,
