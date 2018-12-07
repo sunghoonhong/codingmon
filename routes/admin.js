@@ -230,11 +230,12 @@ router.get('/report', isAdmin, async (req, res, next) => {
 
 router.post('/delete/declined', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
+    console.log(req.body.drid);
     try {
         // 결과보고서는 파일이름으로 대체했으므로 파일 처리 필요없음
         await conn.query(
             `DELETE FROM report WHERE rid=?`,
-            req.body.drid
+            [req.body.drid]
         );
         return res.redirect('/');
     }
