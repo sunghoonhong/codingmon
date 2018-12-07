@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  h2 의뢰완료요청 관리
+
+  h3 거부된 의뢰완료요청
+  table
+    tr
+      th 의뢰완료요청 번호
+      th 의뢰번호
+      th 의뢰제목
+      th 결과보고서
+      th 삭제
+  for declined in declineds
+    tr
+      td= declined.rid
+      td= declined.rqid
+      td= declined.rname
+      td= declined.rfile
+      td
+        form(action='/admin/delete/declined/' method='post')
+          input(type='hidden' name='drid' value=declined.drid)
+          button.btn(type='submit') X

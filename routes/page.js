@@ -1,6 +1,9 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const multer = require('multer');
+const fs = require('fs');
 const { isLoggedIn, isNotLoggedIn, isAdmin } = require('./middlewares');
+const { external_dir } = require('./preprocess');
 const dbconfig = require('../config/database');
 const router = express.Router();
 
@@ -60,20 +63,37 @@ router.get('/profile/:id', async (req, res, next) => {
                 WHERE job_seeker_id=?',
                 target.job_seeker_id
             );
+            var [internals] = await conn.query(
+                `SELECT rq.rqid, rq.rname, rq.dev_start, rq.dev_end, ar.j_rating, rp.rfile
+                FROM owns_internal oi, accepted ar, report rp, request rq
+                WHERE oi.fid = ? AND oi.arid = ar.arid AND ar.arid = rp.rid AND rp.rqid = rq.rqid`,
+                target.id
+            );
+            conn.release();
+            res.render('profile', {
+                title: req.params.id +'의 프로필',
+                user: req.user,
+                target: target,
+                internals: internals,
+                langs: knows,
+                updateError: req.flash('updateError')
+            });
         }
         else if(exClient.length) {
             target = exClient[0];
             target.type = 'client';
+            conn.release();
+            res.render('profile', {
+                title: req.params.id +'의 프로필',
+                user: req.user,
+                target: target,
+                updateError: req.flash('updateError')
+            });
+        }        
+        else {
+            conn.release();
+            next();
         }
-        conn.release();
-        // else{}
-        res.render('profile', {
-            title: req.params.id +'의 프로필',
-            user: req.user,
-            target: target,
-            langs: knows,
-            updateError: req.flash('updateError')
-        });
     }
     catch (err) {
         conn.release();
@@ -173,7 +193,6 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
 router.post('/request/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        console.log(req.body.targetId);
         await conn.query(
             'DELETE FROM request WHERE rqid=?',
             req.body.targetId
@@ -188,8 +207,62 @@ router.post('/request/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, `public/external/${req.params.fid}`)
+        },
+        filename: (req, file, cb) => {
+            cb(null, file.originalname)
+        }
+    })}).single('efile'), async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `INSERT INTO owns_external(efile, fid)
+            VALUES(?, ?)`,
+            [req.file.originalname, req.params.fid]
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch(err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+})
+
+router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[external]] = await conn.query(
+            `SELECT efile, fid FROM owns_external WHERE pid=?`,
+            req.body.pid
+        );
+        if(!external) {
+            conn.release();
+            return res.status(403).send('해당 외부 포트폴리오가 없습니다');
+        }
+        const { efile, fid } = external;
+        const path = `./public/external/${fid}/${efile}`;
+        fs.unlinkSync(path, (err) => console.error('외부 포트폴리오 삭제 실패', err));
+        await conn.query(
+            `DELETE FROM owns_external WHERE pid=?`,
+            req.body.pid
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch(err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+})
+
 router.get('/', async (req, res, next) => {
-    console.log(req.user);
+    // console.log(req.user);
     try {
         if (!req.user) {
             res.render('main', {

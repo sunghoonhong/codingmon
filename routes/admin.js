@@ -103,8 +103,7 @@ router.post('/lang', isAdmin, async (req, res, next) => {
                 return res.redirect('/admin/lang');
             }
             await conn.query(
-                'INSERT INTO program_lang(lang_name) \
-                VALUES(?)',
+                'INSERT INTO program_lang(lang_name) VALUES(?)',
                 req.body.lang_name
             );
             conn.release();
@@ -198,6 +197,46 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
             team: team,
             members: members
         });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.get('/report', isAdmin, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [declineds] = await conn.query(
+            `SELECT rp.rid, rq.rqid, rq.rname, rp.rfile 
+            FROM report rp, request rq, declined de
+            WHERE rp.rid = de.drid AND rp.rqid = rq.rqid`
+        );
+
+        conn.release();
+        res.render('admin_report', {
+            title: '의뢰완료요청 관리',
+            user: req.user,
+            declineds: declineds
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.post('/delete/declined', isAdmin, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        // 결과보고서는 파일이름으로 대체했으므로 파일 처리 필요없음
+        await conn.query(
+            `DELETE FROM report WHERE rid=?`,
+            req.body.drid
+        );
+        return res.redirect('/');
     }
     catch (err) {
         conn.release();
