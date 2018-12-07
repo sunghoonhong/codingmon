@@ -6,8 +6,8 @@ block content
   if submitError
     .error-message= submitError
   
+  h3 개발 중인 의뢰
   #submit-form
-
   table
     tr
       th 의뢰 번호
@@ -16,16 +16,59 @@ block content
       th 개발 시작날짜
       th 의뢰 금액
       th 완료 신청
-    for request in requests
+    for dev in devs
       tr
         td
-          a(href=`/request/${request.rqid}`)= request.rqid
-        td= request.cid
-        td= request.rname
-        td= format(request.dev_start)
-        td= request.reward
+          a(href=`/request/${dev.rqid}`)= dev.rqid
+        td= dev.cid
+        td= dev.rname
+        td= format(dev.dev_start)
+        td= dev.reward
         td
-          button.submit-btn(data-rqid=request.rqid) 신청
+          button.btn.submit-btn(data-rqid=dev.rqid) 신청
+
+  h3 수락 대기중인 의뢰
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+      th 신청 상태
+    for waiting in waitings
+      tr
+        td
+          a(href=`/dev/${waiting.rqid}`)= waiting.rqid
+        td= waiting.cid
+        td= waiting.rname
+        td= format(waiting.dev_start)
+        td= waiting.reward
+        td 대기중
+
+  h3 거절된 의뢰
+  #submit-form
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+      th 다시 신청
+      th 거절 사유
+    for declined in declineds
+      tr
+        td
+          a(href=`/request/${declined.rqid}`)= declined.rqid
+        td= declined.cid
+        td= declined.rname
+        td= format(declined.dev_start)
+        td= declined.reward
+        td
+          button.btn.submit-btn(data-rqid=declined.rqid) 신청
+        td
+          a.btn(href=`/freelancer/request/${declined.rqid}/declined`) 사유
 
 block script
   script.

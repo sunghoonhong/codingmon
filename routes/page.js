@@ -262,7 +262,6 @@ router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next)
 })
 
 router.get('/', async (req, res, next) => {
-    // console.log(req.user);
     try {
         if (!req.user) {
             res.render('main', {
