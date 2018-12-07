@@ -307,38 +307,6 @@ router.post('/report/submit', isLoggedIn, async (req, res, next) => {
     }
 });
 
-router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
-    const conn = await pool.getConnection(async conn => conn);
-    try {
-        await conn.query(
-            `UPDATE report rep, request req
-            SET rep.status = 'accepted', req.dev_end = now()
-            WHERE rep.rid = ? and rep.rqid = req.rqid`,
-            req.params.rid
-        );
-        const[users] = await conn.query(
-            `SELECT f.id as fid
-            FROM freelancer f, report rep, job_seeker j
-            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = j.job_seeker_id 
-            AND j.job_seeker_id = f.job_seeker_id`,
-            req.params.rid
-        );
-        await conn.query(
-            `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
-            [req.params.rid, req.body.rating]
-        );
-        await conn.query(
-            `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
-            [users[0].fid, req.params.rid]
-        );
-        return res.redirect('/');
-    }
-    catch (err) {
-        conn.release();
-        next(err);
-    }
-});
-
 router.get('/request/:rqid/declined', isLoggedIn, async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
@@ -358,6 +326,50 @@ router.get('/request/:rqid/declined', isLoggedIn, async (req, res, next) => {
             messages: messages,
             rqid:req.params.rqid,
         });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.get('/accepted', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [acceptances] = await conn.query(
+            `SELECT ac.*, req.rqid, req.rname, rep.rfile
+            FROM freelancer f, job_seeker j, report rep, accepted ac, request req
+            WHERE f.id = ? AND f.job_seeker_id = j.job_seeker_id AND
+            j.job_seeker_id = rep.job_seeker_id AND rep.rid = ac.arid AND
+            rep.rqid = req.rqid AND ac.c_rating is NULL`,
+            req.user.id
+        );
+        conn.release();
+        res.render('freelancer_accepted', {
+            title: '요청수락된 의뢰',
+            user: req.user,
+            acceptances: acceptances
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.post('/accepted', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `UPDATE accepted
+            SET c_rating = ?
+            WHERE arid=?`,
+            [req.body.rating, req.body.rid]
+        );
+        conn.release();
+        res.redirect('/');
     }
     catch (err) {
         conn.release();
