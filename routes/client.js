@@ -264,10 +264,9 @@ router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     try {
         const[reports] = await conn.query(
             `SELECT f.id as fid, rep.rfile, rep.rid
-            FROM request req, freelancer f, report rep, client c, job_seeker j
-            WHERE req.rqid = ? AND req.rqid = rep.rqid 
-            and rep.status = 'waiting' and rep.job_seeker_id = j.job_seeker_id
-            and j.job_seeker_id = f.job_seeker_id`,
+            FROM request req, freelancer f, report rep
+            WHERE req.rqid = rep.rqid AND rep.status = 'waiting'
+            AND rep.job_seeker_id = f.job_seeker_id AND req.rqid = ?`,
             rqid
         );
         conn.release();
