@@ -30,7 +30,7 @@ DELIMITER ;
  /* before_freelancer_insert */
  /* free lancer insert 전에 job_seeker 하나 만들어 주고 그거를 freelancer의 job_seeker_id에 넣어줌 */
  /* freelancer 회원가입단계 적용(freelancer job_seeker_id 설정)*/
-DELIMITER $$
+/*DELIMITER $$
 create trigger before_freelancer_insert
 before insert on freelancer
 FOR EACH ROW
@@ -41,7 +41,7 @@ BEGIN
 	SET
 	new.job_seeker_id = JSI;
 END$$
-DELIMITER ;
+DELIMITER ;*/
  
  
  /* after_owns_internal_insert */ 
