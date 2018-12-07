@@ -15,5 +15,5 @@ block content
           td= report.fid
           td= report.rfile
           td
-            button.btn(type='submit') 수락
+            a.btn(href=`/client/report/${report.rid}/accept`) 수락
             a.btn(href=`/client/report/${report.rid}/decline`) 거부
