@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS admin (
     PRIMARY KEY (id)
 );
 
+INSERT INTO admin(id, password) SELECT 'admin', '123'
+WHERE NOT EXISTS (SELECT * FROM admin WHERE id='admin');
+
 CREATE TABLE IF NOT EXISTS job_seeker (
     job_seeker_id INT NOT NULL AUTO_INCREMENT,
     PRIMARY KEY (job_seeker_id)
