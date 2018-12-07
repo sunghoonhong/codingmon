@@ -85,9 +85,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     params.push(id);
     sql += 'WHERE id=?';
     try {
-        await conn.query(
-            sql, params
-        );
+        await conn.query(sql, params);
         var jsid;
         if (req.user.type=='freelancer')
             jsid = req.user.job_seeker_id;
@@ -107,7 +105,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
             );
         }
         conn.release();
-        res.redirect('/');
+        return res.redirect('/');
     }
     catch (err) {
         conn.release();
@@ -124,7 +122,7 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             req.body.targetId
         );
         conn.release();
-        res.redirect('/');
+        return res.redirect('/');
     }
     catch (err) {
         conn.release();
@@ -190,6 +188,9 @@ router.get('/request', async (req, res, next) => {
 router.post('/apply', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        /*
+            최소조건 만족 체크!!!
+        */
         await conn.query(
             `INSERT INTO applys(rqid, job_seeker_id) VALUES(?, ?)`,
             [req.body.rqid, req.user.job_seeker_id]
