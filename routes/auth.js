@@ -19,14 +19,12 @@ router.post('/join/freelancer', isNotLoggedIn, async (req, res, next) => {
     }
   }
   if(!langFlag) {
-    conn.release();
     req.flash('joinError', '적어도 언어 하나는 하세요');
     return res.redirect('/join');
   }
   const { 
     id, pw, name, phone_num, age, major, career
   } = req.body;
-  // console.log(req.body);
   try {
     const conn = await pool.getConnection(async conn => conn);
     try {

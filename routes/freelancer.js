@@ -233,19 +233,40 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
 router.get('/working', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [requests] = await conn.query(
+        const [devs] = await conn.query(
             `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
             FROM request R,client C,freelancer F, job_seeker J, applys A
             WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
             AND J.job_seeker_id = A.job_seeker_id AND F.id=?
-            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end is null`,
+            AND NOT EXISTS(SELECT * FROM report rep WHERE R.rqid=rep.rqid)
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL`,
+            req.user.id
+        );
+        const [waitings] = await conn.query(
+            `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
+            FROM request R,client C,freelancer F, job_seeker J, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
+            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
+            AND (SELECT rep.status FROM report rep WHERE R.rqid=rep.rqid ORDER BY rep.rid DESC LIMIT 1)='waiting'
+            AND R.dev_end IS NULL AND F.id=?`,
+            req.user.id
+        );
+        const [declineds] = await conn.query(
+            `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
+            FROM request R,client C,freelancer F, job_seeker J, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
+            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
+            AND (SELECT rep.status FROM report rep WHERE R.rqid=rep.rqid ORDER BY rep.rid DESC LIMIT 1)='declined'
+            AND R.dev_end IS NULL AND F.id=?`,
             req.user.id
         );
         conn.release();
         res.render('freelancer_working', {
             title: '진행 중인 의뢰',
             user: req.user,
-            requests: requests,
+            devs: devs,
+            waitings: waitings,
+            declineds: declineds,
             submitError: req.flash('submitError')
         });
     }
@@ -280,6 +301,65 @@ router.post('/report/submit', isLoggedIn, async (req, res, next) => {
     }
     catch(err) {
         req.flash('submitError', '완료 신청 중 에러발생')
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `UPDATE report rep, request req
+            SET rep.status = 'accepted', req.dev_end = now()
+            WHERE rep.rid = ? and rep.rqid = req.rqid`,
+            req.params.rid
+        );
+        const[users] = await conn.query(
+            `SELECT f.id as fid
+            FROM freelancer f, report rep, job_seeker j
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = j.job_seeker_id 
+            AND j.job_seeker_id = f.job_seeker_id`,
+            req.params.rid
+        );
+        await conn.query(
+            `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+            [req.params.rid, req.body.rating]
+        );
+        await conn.query(
+            `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+            [users[0].fid, req.params.rid]
+        );
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+router.get('/request/:rqid/declined', isLoggedIn, async (req, res, next) => {
+    const rqid = req.params.rqid;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [messages] = await conn.query(
+            `SELECT rep.rfile, d.message
+            FROM declined d, request req, report rep
+            WHERE req.rqid = ? AND req.rqid = rep.rqid AND
+            rep.status = 'declined' AND rep.rid = d.drid
+            ORDER BY rep.rid DESC`,
+            rqid
+        );
+        conn.release();
+        res.render('freelancer_message', {
+            title: '거절 메시지',
+            user: req.user,
+            messages: messages,
+            rqid:req.params.rqid,
+        });
+    }
+    catch (err) {
         conn.release();
         console.error(err);
         next(err);

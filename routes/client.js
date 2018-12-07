@@ -283,6 +283,53 @@ router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     }
 });
 
+router.get('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
+    try {
+        res.render('client_accept', {
+            title: '요청 수락',
+            user: req.user,
+            rid: req.params.rid
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `UPDATE report rep, request req
+            SET rep.status = 'accepted', req.dev_end = now()
+            WHERE rep.rid = ? and rep.rqid = req.rqid`,
+            req.params.rid
+        );
+        const [users] = await conn.query(
+            `SELECT f.id as fid
+            FROM freelancer f, report rep, job_seeker j
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = j.job_seeker_id 
+            AND j.job_seeker_id = f.job_seeker_id`,
+            req.params.rid
+        );
+        await conn.query(
+            `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+            [req.params.rid, req.body.rating]
+        );
+        await conn.query(
+            `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+            [users[0].fid, req.params.rid]
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
 router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
     try {
         res.render('client_decline', {

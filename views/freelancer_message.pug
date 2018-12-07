@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h2 거절 메시지 기록
+  table
+    thead
+      tr
+        th 보고서
+        th 거절메시지
+    tbody
+      for message in messages
+        tr
+          td= message.rfile
+          td= message.message
