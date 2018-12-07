@@ -100,6 +100,15 @@ CREATE TABLE IF NOT EXISTS program_lang (
     PRIMARY KEY (lang_name)
 );
 
+INSERT INTO program_lang SELECT 'C'
+WHERE NOT EXISTS (SELECT * FROM program_lang WHERE lang_name='C');
+INSERT INTO program_lang SELECT 'Java'
+WHERE NOT EXISTS (SELECT * FROM program_lang WHERE lang_name='Java');
+INSERT INTO program_lang SELECT 'Python'
+WHERE NOT EXISTS (SELECT * FROM program_lang WHERE lang_name='Python');
+INSERT INTO program_lang SELECT 'JavaScript'
+WHERE NOT EXISTS (SELECT * FROM program_lang WHERE lang_name='JavaScript');
+
 CREATE TABLE IF NOT EXISTS knows (
     job_seeker_id INT NOT NULL,
     lang_name VARCHAR(20) NOT NULL,
