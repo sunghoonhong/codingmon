@@ -65,6 +65,23 @@ block content
             .error-message= updateError
 
         h2 내적 포트폴리오
+        table
+          tr
+            th 의뢰 번호
+            th 의뢰 제목
+            th 개발 시작날짜
+            th 개발 종료날짜
+            th 받은 평점
+            th 결과 보고서
+          for internal in internals
+            tr
+              td= internal.rqid
+              td= internal.rname
+              td= format(internal.dev_start)
+              td= format(internal.dev_end)
+              td= internal.j_rating
+              td= internal.rfile
+
         h2 외적 포트폴리오
         a.btn(href=`/freelancer/${target.id}/external`) 조회
 

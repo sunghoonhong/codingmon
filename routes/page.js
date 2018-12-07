@@ -63,20 +63,37 @@ router.get('/profile/:id', async (req, res, next) => {
                 WHERE job_seeker_id=?',
                 target.job_seeker_id
             );
+            var [internals] = await conn.query(
+                `SELECT rq.rqid, rq.rname, rq.dev_start, rq.dev_end, ar.j_rating, rp.rfile
+                FROM owns_internal oi, accepted ar, report rp, request rq
+                WHERE oi.fid = ? AND oi.arid = ar.arid AND ar.arid = rp.rid AND rp.rqid = rq.rqid`,
+                target.id
+            );
+            conn.release();
+            res.render('profile', {
+                title: req.params.id +'의 프로필',
+                user: req.user,
+                target: target,
+                internals: internals,
+                langs: knows,
+                updateError: req.flash('updateError')
+            });
         }
         else if(exClient.length) {
             target = exClient[0];
             target.type = 'client';
+            conn.release();
+            res.render('profile', {
+                title: req.params.id +'의 프로필',
+                user: req.user,
+                target: target,
+                updateError: req.flash('updateError')
+            });
+        }        
+        else {
+            conn.release();
+            next();
         }
-        conn.release();
-        // else{}
-        res.render('profile', {
-            title: req.params.id +'의 프로필',
-            user: req.user,
-            target: target,
-            langs: knows,
-            updateError: req.flash('updateError')
-        });
     }
     catch (err) {
         conn.release();

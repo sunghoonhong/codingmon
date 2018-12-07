@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  h2= `${targetId}의 외부 포트폴리오`
+  h2= `${targetId}의 외적 포트폴리오`
   table
     tr
       th 포트폴리오
@@ -19,7 +19,7 @@ block content
               button.btn(type='submit') X
 
   if user.type == 'admin' || user.id == targetId
-    h2 외부 포트폴리오 추가
+    h2 외적 포트폴리오 추가
     form(action=`/create/external/${targetId}` method='post' enctype="multipart/form-data")
       input(type='file' name='efile')
       input(type='submit')

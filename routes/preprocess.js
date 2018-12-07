@@ -11,3 +11,14 @@ exports.external_dir = (req, res, next) => {
         next(err);
     }
 };
+
+exports.document_dir = (req, res, next) => {
+    const dirname =`/public/document/${req.params.rqid}`;
+    try {
+        false.ensuerDirSync('./' + dirname);
+        next();
+    }
+    catch (err) {
+        next(err);
+    }
+}

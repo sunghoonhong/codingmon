@@ -10,29 +10,24 @@ const pool = mysql.createPool(dbconfig);
 router.get('/profile', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        var [knows] = await conn.query(
+        const [langs] = await conn.query(
             'SELECT lang_name, level FROM knows \
             WHERE job_seeker_id=?',
             req.user.job_seeker_id
         );
-        var [langs] = await conn.query(
-            'SELECT lang_name FROM program_lang'
+        const [internals] = await conn.query(
+            `SELECT rq.rqid, rq.rname, rq.dev_start, rq.dev_end, ar.j_rating, rp.rfile
+            FROM owns_internal oi, accepted ar, report rp, request rq
+            WHERE oi.fid = ? AND oi.arid = ar.arid AND ar.arid = rp.rid AND rp.rqid = rq.rqid`,
+            [req.user.id]
         );
-        for(var i=0; i<langs.length; ++i) {
-            langs[i].level = 0;
-            for(var j=0; j<knows.length; ++j) {
-                if(langs[i].lang_name == knows[j].lang_name) {
-                    langs[i].level = knows[j].level;
-                    break;
-                }
-            }
-        }
         conn.release();
         res.render('profile', {
             title: '나의 프로필',
             user: req.user,
             target: req.user,
             langs: langs,
+            internals: internals,
             updateError: req.flash('updateError')
         });
     }
@@ -147,7 +142,7 @@ router.get('/:id/external', isLoggedIn, async (req, res, next) => {
         
         conn.release();
         res.render('external', {
-            title: '외부 포트폴리오 목록',
+            title: '외적 포트폴리오 목록',
             user: req.user,
             targetId: req.params.id,
             externals: externals
