@@ -2,7 +2,7 @@ extends layout
 
 block content
   if !joinType
-    h2= 'Select Join Type'
+    h2 가입 유형을 선택하세요
     .jointype
       form#join_type(action='/join' method='post')
         .input-group
@@ -15,7 +15,7 @@ block content
           .error-message= joinError
 
   else if joinType=='freelancer'
-    h2= 'Freelancer Join'
+    h2 프리랜서 가입
     form#join-form(action='/auth/join/freelancer' method='post')
       .input-group
         label(for='id') ID
@@ -48,7 +48,7 @@ block content
         .error-message= joinError
     
   else if joinType=='client'
-    h2= 'Client Join'
+    h2 의뢰자 가입
     form#join-form(action='/auth/join/client' method='post')
       .input-group
         label(for='id') ID

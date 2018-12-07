@@ -20,7 +20,7 @@ html
     link(rel='stylesheet' href='/stylesheets/main.css')
   body
     header
-      a#index(href='/') Coding Mon
+      a#index(href='/') 코딩몬 CODINGMON
     .menu
       if user
         if user.type == 'admin'
@@ -59,8 +59,8 @@ html
               input#pw(type='password' name='pw' required)
             if loginError
               .error-message= loginError
-            button#login.btn(type='submit') Login
-            a#join.btn(href='/join') Join
+            button#login.btn(type='submit') 로그인
+            a#join.btn(href='/join') 회원가입
       
       block content
     block script

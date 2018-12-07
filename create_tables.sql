@@ -67,8 +67,6 @@ CREATE TABLE IF NOT EXISTS client (
     PRIMARY KEY (id)
 );
 
-
-
 CREATE TABLE IF NOT EXISTS request (
     rqid INT NOT NULL AUTO_INCREMENT,
     cid VARCHAR(20) NOT NULL,
@@ -95,7 +93,6 @@ CREATE TABLE IF NOT EXISTS document (
         REFERENCES request (rqid),
     PRIMARY KEY (did)
 );
-
 
 
 CREATE TABLE IF NOT EXISTS program_lang (
@@ -132,7 +129,7 @@ CREATE TABLE IF NOT EXISTS requires (
 CREATE TABLE IF NOT EXISTS applys (
     rqid INT NOT NULL,
     job_seeker_id INT NOT NULL,
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'waiting',
     PRIMARY KEY (rqid , job_seeker_id),
     FOREIGN KEY (rqid)
         REFERENCES request (rqid)
@@ -144,7 +141,7 @@ CREATE TABLE IF NOT EXISTS applys (
 
 CREATE TABLE IF NOT EXISTS report (
     rid INT NOT NULL AUTO_INCREMENT,
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'waiting' ,
     rfile VARCHAR(100) NOT NULL,
     rqid INT NOT NULL,
     job_seeker_id INT NOT NULL,
@@ -209,7 +206,6 @@ CREATE TABLE IF NOT EXISTS owns_internal (
         REFERENCES freelancer (id)
         ON DELETE CASCADE ON UPDATE CASCADE	
 );
-
 
  CREATE TABLE IF NOT EXISTS c_rating_stat (
     id VARCHAR(20) NOT NULL,
