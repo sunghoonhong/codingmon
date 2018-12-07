@@ -22,6 +22,7 @@ block content
 		tr
 			th 의뢰 번호
 			th 의뢰 제목
+			th 의뢰 시작날짜
 			th 개발 시작날짜
 			th 의뢰 금액
 			th 신청자 ID
@@ -31,6 +32,7 @@ block content
 				td
 					a(href=`/request/${request.rqid}`)= request.rqid
 				td= request.rname
+				td= format(request.start_date)
 				td= format(request.dev_start)
 				td= request.reward
 				td= request.fid
