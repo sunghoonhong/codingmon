@@ -362,7 +362,7 @@ router.post('/delete/document', isLoggedIn, document_dir, async (req, res, next)
 });
 
 // 홈페이지
-router.get('/', async (req, res, next) => {
+router.get('/', (req, res, next) => {
     try {
         if (!req.user) {
             res.render('main', {

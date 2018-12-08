@@ -8,7 +8,7 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
-
+// 특정 팀의 정보 조회
 router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
     const tname = req.params.tname;
     const conn = await pool.getConnection(async conn => conn);
@@ -36,6 +36,7 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
     }
 });
 
+// 팀장이 팀원 추방
 router.post('/ban', isLoggedIn, async(req, res, next) => {
     const {
         tname, banId
@@ -62,6 +63,7 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
 });
 
 
+// 팀 삭제
 router.post('/delete', isLoggedIn, async(req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -83,7 +85,7 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
     }
 });
 
-
+// 프리랜서가 자신이 팀장인 팀 목록을 조회
 router.get('/list', isLoggedIn, async(req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -105,6 +107,7 @@ router.get('/list', isLoggedIn, async(req, res, next) => {
     }
 });
 
+// 프리랜서가 팀 생성하는 양식
 router.get('/create', isLoggedIn, async (req, res, next) => {
     res.render('create_team', {
         title: '팀 생성',
@@ -113,6 +116,7 @@ router.get('/create', isLoggedIn, async (req, res, next) => {
     });
 });
 
+// 프리랜서가 팀 생성
 router.post('/create', isLoggedIn, async (req, res, next) => {
     const {
         tname, memberId
@@ -159,8 +163,8 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
         
         // 팀 생성
         await conn.query(
-            'INSERT INTO team(tname, career, mgr_id, people_num, job_seeker_id) \
-            VALUES(?, ?, ?, 2, ?)',
+            `INSERT INTO team(tname, career, mgr_id, people_num, job_seeker_id)
+            VALUES(?, ?, ?, 2, ?)`,
             [tname, Math.min(exMgr.career, exMem.career), req.user.id, jobSeeker.insertId]
         );
         
@@ -219,7 +223,8 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
     }
 });
 
-router.get('/:tname', isMgr, async (req, res, next) => {
+// 팀장이 특정 팀을 선택했을 때 그 팀과 관련된 행동을 할 수 있는 팀페이지 초기화면
+router.get('/:tname', isMgr, (req, res, next) => {
     const tname = req.params.tname;
     try {
         res.render('team', {

@@ -7,6 +7,7 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
+// 프리랜서 자신의 정보 조회
 router.get('/profile', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -38,10 +39,12 @@ router.get('/profile', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 ID의 프리랜서 정보 조회
 router.get('/profile/:id', (req, res) => {
     res.redirect('/profile/'+ req.params.id);
 });
 
+// 프리랜서 정보 수정
 router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     const keys = Object.keys(req.body);
     var langFlag = false
@@ -114,6 +117,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     }
 })
 
+// 프리랜서 삭제
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -130,6 +134,7 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+// 특정 프리랜서의 외부 포트폴리오 조회
 router.get('/:id/external', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try{
@@ -152,12 +157,14 @@ router.get('/:id/external', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 프리랜서의 특정 외적 포트폴리오 다운로드
 router.get('/:id/external/:file', (req, res, next) => {
     return res.sendFile(`${req.params.file}`, {
         root: `public/external/${req.params.id}/`
     });
 });
 
+// 구인 중인 의뢰목록 확인
 router.get('/request', async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
@@ -185,6 +192,8 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
+
+// 구인 중인 의뢰목록에서 의뢰에 신청
 router.post('/apply', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -206,11 +215,13 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
+// 신청한 의뢰목록 조회
 router.get('/waiting', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            `SELECT R.rqid, R.rname, C.name, R.start_date, R.reward, A.status
+            `SELECT R.rqid, R.rname, R.cid, R.start_date, R.reward, A.status
             FROM request R,client C,freelancer F, job_seeker J, applys A
             WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
             AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid
@@ -230,6 +241,7 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 진행중인 의뢰목록 조회
 router.get('/working', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -277,6 +289,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 의뢰완료 신청 전송
 router.post('/report/submit', isLoggedIn, async (req, res, next) => {
     const { rfile, rqid } = req.body;
     const conn = await pool.getConnection(async conn => conn);
@@ -307,6 +320,7 @@ router.post('/report/submit', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 의뢰에 대한 거절메시지 이력 조회
 router.get('/request/:rqid/declined', isLoggedIn, async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
@@ -334,6 +348,7 @@ router.get('/request/:rqid/declined', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 수락된 의뢰 목록 조회
 router.get('/accepted', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -359,6 +374,8 @@ router.get('/accepted', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
+// 의뢰자 평점 지정
 router.post('/accepted', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -378,6 +395,7 @@ router.post('/accepted', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 프리랜서의 홈페이지
 router.get('/', async (req, res, next) => {
     try {
         res.render('main', {

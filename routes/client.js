@@ -11,6 +11,7 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
+// 의뢰자 자신의 정보 조회
 router.get('/profile', isLoggedIn, (req, res) => {
     res.render('profile', {
         title: '나의 프로필',
@@ -19,10 +20,13 @@ router.get('/profile', isLoggedIn, (req, res) => {
     });
 });
 
+// 특정 ID의 의뢰자 조회
 router.get('/profile/:id', (req, res) => {
     res.redirect('/profile/'+ req.params.id);
 });
 
+
+// 의뢰자 정보 수정
 router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     const { 
         id, pw, name, phone_num
@@ -53,6 +57,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 의뢰자 삭제
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -69,6 +74,8 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+
+// 의뢰자 자신의 의뢰 목록
 router.get('/request', isLoggedIn, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
@@ -94,10 +101,17 @@ router.get('/request', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
+// 특정 의뢰의 정보
 router.get('/request/:rqid', async (req, res, next) => {
     res.redirect('/request/'+req.params.rqid);
 })
 
+/*
+    의뢰 신청과 관련
+*/
+
+// 특정 의뢰에 신청한 명단
 router.get('/request/:rqid/apply', async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
@@ -132,6 +146,7 @@ router.get('/request/:rqid/apply', async (req, res, next) => {
     }
 });
 
+// 특정 의뢰에 신청한 사람들 중 선택
 router.post('/request/:rqid/apply', async (req, res, next) => {
     const rqid = req.params.rqid;
     const job_seeker_id = req.body.job_seeker_id;
@@ -168,6 +183,11 @@ router.post('/request/:rqid/apply', async (req, res, next) => {
     }
 });
 
+/*
+    새로운 의뢰 등록
+*/
+
+// 의뢰 등록 양식
 router.get('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -188,7 +208,7 @@ router.get('/register', isClient, async (req, res, next) => {
     }
 });
 
-
+// 의뢰자가 새로운 의뢰 등록
 router.post('/register', isClient, async (req, res, next) => {
     const { 
         rname, reward, start_date, end_date,
@@ -226,7 +246,7 @@ router.post('/register', isClient, async (req, res, next) => {
             user: req.user,
             rqid: request.insertId
         });
-        
+
     } catch (err) {
         req.flash('regError', '의뢰 등록 오류');
         console.error(err);
@@ -234,6 +254,8 @@ router.post('/register', isClient, async (req, res, next) => {
         next(err);
     }
 });
+
+// 새로운 의뢰 등록 시 복수의 의뢰문서 등록
 router.post('/register/document/:rqid', isClient, document_dir, multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
@@ -264,6 +286,7 @@ router.post('/register/document/:rqid', isClient, document_dir, multer({
     }
 });
 
+// 현재 진행중인 의뢰목록
 router.get('/working', isLoggedIn, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
@@ -291,6 +314,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 의뢰에 대한 의뢰완료요청 목록
 router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
@@ -316,6 +340,11 @@ router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     }
 });
 
+/*
+    의뢰완료요청에 대해 수락
+*/
+
+// 특정 의뢰완료요청에 대해 수락할 시 평점 지정 양식
 router.get('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
     try {
         res.render('client_accept', {
@@ -330,6 +359,7 @@ router.get('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 의뢰완료요청에 대해 평점 지정과 함께 수락 처리
 router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -363,6 +393,11 @@ router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
     }
 });
 
+/*
+    의뢰완료요청에 대해 거절
+*/
+
+// 특정 의뢰완료요청에 대해 거절할 시 거절 메시지 입력 양식
 router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
     try {
         res.render('client_decline', {
@@ -377,6 +412,7 @@ router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 특정 의뢰완료요청에 대해 거절메시지와 함께 거절 처리
 router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -400,6 +436,8 @@ router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
+// 의뢰자의 홈페이지
 router.get('/', async (req, res, next) => {
     try {
         res.render('main', {

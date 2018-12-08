@@ -12,6 +12,7 @@ exports.external_dir = (req, res, next) => {
     }
 };
 
+// 의뢰의 의뢰 문서 디렉토리가 없으면 만들어준다.
 exports.document_dir = (req, res, next) => {
     const dirname =`/public/document/${req.params.rqid}`;
     try {
