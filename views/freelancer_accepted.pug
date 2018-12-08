@@ -5,7 +5,6 @@ block content
   table
     thead
       tr
-        th 의뢰 ID
         th 의뢰 이름
         th 보고서 이름
         th 의뢰자가 준 평점
@@ -13,7 +12,6 @@ block content
     tbody
       for accept in acceptances
         tr
-          td= accept.rqid
           td= accept.rname
           td= accept.rfile
           td= accept.j_rating
