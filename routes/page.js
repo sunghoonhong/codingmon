@@ -232,7 +232,7 @@ router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
         if(!req.file) {
             conn.release();
             console.error('선택된 파일이 없습니다');
-            return res.redirect(`/profile/${fid}`);
+            return res.redirect(`/profile/${req.params.fid}`);
         }
         await conn.query(
             `INSERT INTO owns_external(efile, fid)
@@ -240,7 +240,7 @@ router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
             [req.file.originalname, req.params.fid]
         );
         conn.release();
-        return res.redirect(`/profile/${fid}`);
+        return res.redirect(`/profile/${req.params.fid}`);
     }
     catch(err) {
         conn.release();
@@ -269,7 +269,7 @@ router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next)
             req.body.pid
         );
         conn.release();
-        return res.redirect('/');
+        return res.redirect(`/freelancer/${fid}/external`);
     }
     catch(err) {
         conn.release();
