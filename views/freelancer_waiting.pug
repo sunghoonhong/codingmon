@@ -6,6 +6,7 @@ block content
   table
     tr
       th 의뢰 번호
+      th 의뢰자 ID
       th 의뢰 제목
       th 의뢰 시작날짜
       th 의뢰 금액
@@ -14,6 +15,8 @@ block content
       tr
         td
           a(href=`/request/${request.rqid}`)= request.rqid
+        td
+          a(href=`/profile/${request.cid}`)= request.cid
         td= request.rname
         td= format(request.start_date)
         td= request.reward

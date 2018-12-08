@@ -20,16 +20,16 @@ block content
   table
     thead
       tr
-        th 의뢰 번호
-        th 의뢰 제목
-        th 의뢰 금액
-        th 의뢰 시작날짜
-        th 의뢰 종료날짜
-        th 최소 인원
-        th 최대 인원
-        th 최소 경력
-        th 개발 시작날짜
-        th 개발 종료날짜
+        th 번호
+        th 의뢰제목
+        th 의뢰금액
+        th 의뢰시작
+        th 의뢰종료
+        th 최소인원
+        th 최대인원
+        th 최소경력
+        th 개발시작
+        th 개발종료
         th 신청자
     tbody
       for request in requests
@@ -46,4 +46,4 @@ block content
           td= format(request.dev_start)
           td= format(request.dev_end)
           td
-            a.btn(href=`/client/request/${request.rqid}/apply`)
+            a.btn(href=`/client/request/${request.rqid}/apply`) 확인

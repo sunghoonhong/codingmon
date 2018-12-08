@@ -2,6 +2,10 @@ const mysql = require('mysql2/promise');
 const dbconfig = require('../config/database');
 const pool = mysql.createPool(dbconfig);
 
+// 로그인 상태인지
+// 또는
+// 각 유저의 종류를 확인
+
 exports.isLoggedIn = (req, res, next) => {
     if (req.isAuthenticated()) {
         next();
@@ -50,6 +54,8 @@ exports.isClient = (req, res, next) => {
     }
 };
 
+// 팀 페이지를 사용하는 경우
+// 로그인한 사용자가 그 팀의 팀장인지 확인
 exports.isMgr = async (req, res, next) => {
     const tname = req.params.tname;
     const conn = await pool.getConnection(async conn => conn);

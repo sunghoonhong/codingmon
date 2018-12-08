@@ -5,6 +5,7 @@ const dbconfig = require('../config/database');
 
 const pool = mysql.createPool(dbconfig);
 
+// 실제 로그인 처리 부분
 module.exports = (passport) => {
     passport.use(new LocalStrategy({
         usernameField: 'id',
@@ -13,43 +14,45 @@ module.exports = (passport) => {
         try {
             const conn = await pool.getConnection(async conn => conn);
             try {
-                const [exAdmin] = await conn.query(
+                const [[exAdmin]] = await conn.query(
                     'SELECT id, password FROM admin WHERE id=?', id
-                );
-                if(exAdmin.length) {
+                );                
+                // 관리자는 비밀번호가 따로 암호화 되어있지 않다
+                if(exAdmin) {
                     conn.release();
-                    const result = pw == exAdmin[0].password;
+                    const result = pw == exAdmin.password;
                     if (result) {
-                        done(null, exAdmin[0]);
+                        done(null, exAdmin);
                     }
                     else {
                         done(null, false, {
-                            message: 'wrong password'
+                            message: '비밀번호가 틀렸습니다'
                         });
                     }
                 }
+                // 일반 사용자들은 비밀번호가 암호화 되어있다
                 else {
-                    const [exUser] = await conn.query(
-                        'SELECT id, password FROM freelancer WHERE id=? \
-                            UNION   \
-                        SELECT id, password FROM client WHERE id=?',
+                    const [[exUser]] = await conn.query(
+                        `SELECT id, password FROM freelancer WHERE id=?
+                            UNION
+                        SELECT id, password FROM client WHERE id=?`,
                         [id, id]
                     );
                     conn.release();
-                    if (exUser.length) {
-                        const result = await bcrypt.compare(pw, exUser[0].password);
+                    if (exUser) {
+                        const result = await bcrypt.compare(pw, exUser.password);
                         if (result) {
-                            done(null, exUser[0]);
+                            done(null, exUser);
                         }
                         else {
                             done(null, false, {
-                                message: 'wrong password'
+                                message: '비밀번호가 틀렸습니다'
                             });
                         }
                     }
                     else {
                         done(null, false, {
-                            message: 'Unregistered'
+                            message: '등록되지 않은 사용자입니다'
                         });
                     }
                 }

@@ -5,13 +5,19 @@ block content
   table
     thead
       tr
+        th 의뢰번호
+        th 의뢰자 ID
         th 의뢰 이름
-        th 보고서 이름
+        th 보고서
         th 의뢰자가 준 평점
-        th 프리랜서가 준 평점
+        th 내가 줄 평점
     tbody
       for accept in acceptances
         tr
+          td
+            a(href=`/request/${accept.rqid}`)= accept.rqid
+          td
+            a(href=`/profile/${accept.cid}`)= accept.cid
           td= accept.rname
           td= accept.rfile
           td= accept.j_rating
