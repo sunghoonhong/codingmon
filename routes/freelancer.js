@@ -414,11 +414,11 @@ router.get('/', async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [alarms] = await conn.query(
-            `SELECT rq.rqid
-            FROM freelancer f, job_seeker j, request rq, report rp, accepted ac
+            `SELECT rq.rqid, c.name
+            FROM freelancer f, job_seeker j, request rq, report rp, accepted ac, client c
             WHERE f.id = ? AND f.job_seeker_id = j.job_seeker_id
             AND j.job_seeker_id =rp.job_seeker_id AND rp.rid = ac.arid
-            AND rp.rqid = rq.rqid AND ac.c_rating is NULL`,
+            AND rp.rqid = rq.rqid AND rq.cid = c.id AND ac.c_rating is NULL`,
             req.user.id
         );
         conn.release();
