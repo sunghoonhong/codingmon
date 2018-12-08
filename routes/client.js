@@ -35,7 +35,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     var params = [
         name, phone_num
     ];
-    if(pw!='비밀번호') {
+    if(pw) {
         const hash = await bcrypt.hash(pw, 13);
         sql += ', password=?';
         params.push(hash);
@@ -175,7 +175,7 @@ router.post('/request/:rqid/apply', async (req, res, next) => {
             rqid
         );
         conn.release();
-        res.redirect('/')
+        res.redirect('/client/request');
     }
     catch (err) {
         conn.release();
@@ -269,12 +269,18 @@ router.post('/register/document/:rqid', isClient, document_dir, multer({
     const conn = await pool.getConnection(async conn => conn);
     try{
         if(req.files) {
-            req.files.forEach(async file => {
+            for(var i=0, file, exDoc; i<req.files.length; ++i) {
+                file = req.files[i];
+                [[exDoc]] = await conn.query(
+                    `SELECT * FROM document WHERE dfile=? AND rqid=?`,
+                    [file.originalname, req.params.rqid]
+                );
+                if(exDoc) continue;
                 await conn.query(
                     `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
                     [file.originalname, req.params.rqid]
                 );
-            });
+            }
         }
         conn.release();
         return res.redirect(`/`);

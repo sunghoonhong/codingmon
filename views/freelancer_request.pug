@@ -35,8 +35,9 @@ block content
       for request in requests
         tr
           td
-            a(href='/request/'+request.rqid)= request.rqid
-          td= request.cid
+            a(href=`/request/${request.rqid}`)= request.rqid
+          td
+            a(href=`/profile/${request.cid}`)= request.cid
           td= request.rname
           td= request.reward
           td= format(request.start_date)

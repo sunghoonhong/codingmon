@@ -18,10 +18,11 @@ block content
               form(action='/delete/document' method='post')
                 input(type='hidden' name='did' value=doc.did)
                 button.btn(type='submit') X
-  
+  if documentError
+    .error-message= documentError
+    
   if user.type == 'admin'
     h2 의뢰문서 추가
       form(action=`/create/request/${rqid}/document` method='post' enctype='multipart/form-data')
         input(type='file' name='dfile')
         button.btn(type='submit') 추가
-    
