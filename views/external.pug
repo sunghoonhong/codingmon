@@ -20,6 +20,6 @@ block content
 
   if user.type == 'admin' || user.id == targetId
     h2 외적 포트폴리오 추가
-    form(action=`/create/external/${targetId}` method='post' enctype="multipart/form-data")
+    form(action=`/create/external/${targetId}` method='post' enctype='multipart/form-data')
       input(type='file' name='efile')
-      input(type='submit')
+      button.btn(type='submit')

@@ -50,6 +50,9 @@ block content
       .input-group
         label(for=require.lang_name)= require.lang_name
         input(type='number' min=0 max=5 id=require.lang_name name=require.lang_name value=require.level readonly)
+    
+    h3 의뢰 문서
+    a.btn(href=`/request/${request.rqid}/document`) 조회
 
     if user && user.type == 'admin'
       button#update-request.btn(type='button') 수정

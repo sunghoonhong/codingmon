@@ -13,6 +13,7 @@ block content
     //- };
 
   form#join-form(action='/client/register' method='post')
+    h4 기본정보
     .input-group
       label(for='rname') 의뢰 제목
       input#rname(name='rname' required)
@@ -34,12 +35,14 @@ block content
     .input-group
       label(for='min_career') 최소 경력
       input#min_career(type='number' min=0 name='min_career' required)
+
+    h4 프로그래밍 언어별 요구 능숙도
     for lang in langs
       .input-group
         label(for=lang.lang_name)= lang.lang_name
         input(id=lang.lang_name name=lang.lang_name type='number' min=0 max=5 value=0)
-    button.btn(type='submit') 등록
+
+    button.btn(type='submit') 다음
+    
     if regError
       .error-message= regError
-      
-  h2 의뢰문서 해야함!

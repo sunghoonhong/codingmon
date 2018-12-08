@@ -1,9 +1,11 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
 const { 
     isLoggedIn, isNotLoggedIn, isAdmin, isFreelancer, isClient
 } = require('./middlewares');
+const {document_dir} = require('./preprocess');
 const dbconfig = require('../config/database');
 const router = express.Router();
 
@@ -186,6 +188,7 @@ router.get('/register', isClient, async (req, res, next) => {
     }
 });
 
+
 router.post('/register', isClient, async (req, res, next) => {
     const { 
         rname, reward, start_date, end_date,
@@ -194,7 +197,7 @@ router.post('/register', isClient, async (req, res, next) => {
     try {
         if(min_people > max_people && start_date > end_date) {
             req.flash('regError', '입력이 이상합니다');
-            res.redirect('/client/register');
+            return res.redirect('/client/register');
         }
     }
     catch (err) {
@@ -203,29 +206,59 @@ router.post('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [request] = await conn.query(
-            'INSERT INTO request(   \
-                cid, rname, reward, start_date, end_date,   \
-                min_people, max_people, min_career  \
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            `INSERT INTO request(
+                cid, rname, reward, start_date, end_date,
+                min_people, max_people, min_career
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`,
             [req.user.id, rname, reward, start_date, end_date,
             min_people, max_people, min_career]
         );
         var keys = Object.keys(req.body);
         for(var i=7; i<keys.length; i++) {
-            if(req.body[keys[i]]) {
-                await conn.query(
-                    'INSERT INTO requires(rqid, lang_name, level) \
-                    VALUES(?, ?, ?)',
-                    [request.insertId, keys[i], req.body[keys[i]]]
-                );
-            }
+            await conn.query(
+                `INSERT INTO requires(rqid, lang_name, level) VALUES(?, ?, ?)`,
+                [request.insertId, keys[i], req.body[keys[i]]]
+            );
         }
         conn.release();
-        res.redirect('/');
+        res.render('register_document', {
+            title: '의뢰 문서 등록',
+            user: req.user,
+            rqid: request.insertId
+        });
+        
+    } catch (err) {
+        req.flash('regError', '의뢰 등록 오류');
+        console.error(err);
+        conn.release();
+        next(err);
+    }
+});
+router.post('/register/document/:rqid', isClient, document_dir, multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, `public/document/${req.params.rqid}`)
+        },
+        filename: (req, file, cb) => {
+            cb(null, file.originalname)
+        }
+    })}).array('document', 10), async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try{
+        if(req.files) {
+            req.files.forEach(async file => {
+                await conn.query(
+                    `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
+                    [file.originalname, req.params.rqid]
+                );
+            });
+        }
+        conn.release();
+        return res.redirect(`/`);
     }
     catch (err) {
         conn.release();
-        req.flash('regError', '오류 발생')
+        req.flash('regError', '의뢰문서 업로드 오류')
         console.error(err);
         res.redirect('/client/register');
     }

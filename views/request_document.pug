@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h2 의뢰문서
+  table
+    thead
+      tr
+        th 문서 파일
+        if user.type == 'admin'
+          th 삭제
+    tbody
+      for doc in documents
+        tr
+          td
+            a(href=`/request/document/${rqid}/${doc.dfile}`)= doc.dfile
+          if user.type == 'admin'
+            td
+              form(action='/delete/document' method='post')
+                input(type='hidden' name='did' value=doc.did)
+                button.btn(type='submit') X
+  
+  if user.type == 'admin'
+    h2 의뢰문서 추가
+      form(action=`/create/request/${rqid}/document` method='post' enctype='multipart/form-data')
+        input(type='file' name='dfile')
+        button.btn(type='submit') 추가
+    
