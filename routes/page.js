@@ -203,10 +203,17 @@ router.post('/request/delete', isAdmin, document_dir, async (req, res, next) => 
             `SELECT dfile, did FROM document WHERE rqid=?`,
             req.body.targetId
         );
+        // 실제 의뢰문서 파일들 삭제
         var path;
         for(i in docs) {
             path = `./public/document/${req.body.targetId}/${docs[i].dfile}`;
-            fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
+            if(fs.existsSync(path))
+                fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
+        }
+        // 의뢰의 디렉토리 삭제
+        var rootPath = `./public/document/${req.body.targetId}`
+        if(fs.existsSync(rootPath)) {
+            fs.rmdirSync(rootPath, (err) => console.error(err));
         }
         // DB에서 의뢰 삭제 (의뢰문서는 CASCADE로 삭제)
         await conn.query(
@@ -285,7 +292,8 @@ router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next)
         }
         const { efile, fid } = external;
         const path = `./public/external/${fid}/${efile}`;
-        fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
+        if(fs.existsSync(path)) 
+            fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
         await conn.query(
             `DELETE FROM owns_external WHERE pid=?`,
             req.body.pid

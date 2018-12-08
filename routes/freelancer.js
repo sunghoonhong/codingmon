@@ -129,7 +129,12 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
         var path;
         for(i in externals) {
             path = `./public/external/${req.body.targetId}/${externals[i].efile}`;
-            fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
+            if(fs.existsSync(path))
+                fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
+        }
+        var rootPath = `./public/external/${req.body.targetId}`
+        if(fs.existsSync(rootPath)) {
+            fs.rmdirSync(rootPath, (err) => console.error(err));
         }
 
         // DB에서 프리랜서 삭제 (외적 포트폴리오는 CASCADE로 삭제)
@@ -443,6 +448,7 @@ router.get('/', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.log(err);
         next(err);
     }
