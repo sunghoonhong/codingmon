@@ -229,13 +229,18 @@ router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
     })}).single('efile'), async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        if(!req.file) {
+            conn.release();
+            console.error('선택된 파일이 없습니다');
+            return res.redirect(`/profile/${fid}`);
+        }
         await conn.query(
             `INSERT INTO owns_external(efile, fid)
             VALUES(?, ?)`,
             [req.file.originalname, req.params.fid]
         );
         conn.release();
-        return res.redirect('/');
+        return res.redirect(`/profile/${fid}`);
     }
     catch(err) {
         conn.release();
@@ -319,12 +324,17 @@ router.post('/create/request/:rqid/document', isLoggedIn, document_dir, multer({
     })}).single('dfile'), async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        if(!req.file) {
+            conn.release();
+            console.error('선택된 파일이 없습니다');
+            return res.redirect(`/request/${req.params.rqid}`);
+        }
         await conn.query(
             `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
             [req.file.originalname, req.params.rqid]
         );
         conn.release();
-        return res.redirect('/');
+        return res.redirect(`/request/${req.params.rqid}`);
     }
     catch (err) {
         conn.release();
