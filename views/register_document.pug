@@ -2,6 +2,7 @@ extends layout
 
 block content
   h2 의뢰 문서 등록
+  p 문서 추가는 10개까지만 가능합니다
   form(action=`/client/register/document/${rqid}` method='post' enctype='multipart/form-data')
     #doc-list
     a#append-doc.btn 문서추가
