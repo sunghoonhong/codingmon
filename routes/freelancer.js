@@ -182,7 +182,8 @@ router.get('/request', async (req, res, next) => {
             title: '구인 중인 의뢰 목록',
             user: req.user,
             requests: requests,
-            orderType: req.query.orderType
+            orderType: req.query.orderType,
+            applyError: req.flash('applyError')
         });
     }
     catch (err) {
@@ -192,23 +193,37 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
-
 // 구인 중인 의뢰목록에서 의뢰에 신청
 router.post('/apply', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        /*
-            최소조건 만족 체크!!!
-        */
+        // 프리랜서의 최소 조건 충족 확인
+        const [[pass]] = await conn.query(
+            `SELECT * FROM request R, freelancer F
+            WHERE R.dev_start IS NULL AND R.min_people <= 1 AND F.career >= R.min_career
+            AND R.rqid = ? AND F.id = ?
+            AND NOT EXISTS
+            (SELECT * FROM job_seeker J, knows K, requires req, program_lang pl
+            WHERE F.job_seeker_id = J.job_seeker_id AND J.job_seeker_id = K.job_seeker_id
+            AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
+            AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)`,
+            [req.body.rqid, req.user.id, req.user.id]
+        );
+        console.log(pass);
+        if(!pass) {
+            conn.release();
+            req.flash('applyError', '최소 조건을 충족시키지 못합니다');
+            return res.redirect('/freelancer/request');
+        }
         await conn.query(
             `INSERT INTO applys(rqid, job_seeker_id) VALUES(?, ?)`,
             [req.body.rqid, req.user.job_seeker_id]
         );
         conn.release();
-        res.redirect('/');
+        return res.redirect('/');
     }
     catch (err) {
-        req.flash('applyError', '이미 지원했습니다');
+        req.flash('applyError', '신청 중 오류 발생');
         conn.release();
         console.error(err);
         res.redirect('/');
@@ -224,8 +239,8 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
             `SELECT R.rqid, R.rname, R.cid, R.start_date, R.reward, A.status
             FROM request R,client C,freelancer F, job_seeker J, applys A
             WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid
-            AND F.id=?`, req.user.id
+            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND F.id=?
+            ORDER BY A.status DESC`, req.user.id
         );
         conn.release();
         res.render('freelancer_waiting', {
