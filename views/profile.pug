@@ -1,16 +1,17 @@
 extends layout
 
 block content
-
+  h3 기본 정보
   if target
     if target.type == 'client'
       form#profile-form(action='/'+target.type+'/profile/update' method='post')
         .input-group
           label(for='id') ID
           input#id(name='id' value=target.id required readonly)
-        .input-group
-          label(for='pw') 비밀번호
-          input#pw(type='password' name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
+        if user.type=='admin' || target.id==user.id
+          .input-group
+            label(for='pw') 비밀번호
+            input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
           input#name(name='name' value=target.name required readonly)
@@ -30,9 +31,10 @@ block content
         .input-group
           label(for='id') ID
           input#id(name='id' value=target.id required readonly)
-        .input-group
-          label(for='pw') 비밀번호
-          input#pw(type='password' name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
+        if user.type=='admin' || target.id==user.id
+          .input-group
+            label(for='pw') 비밀번호
+            input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
           input#name(name='name' value=target.name required readonly)
@@ -64,7 +66,7 @@ block content
           if updateError
             .error-message= updateError
 
-        h2 내적 포트폴리오
+        h3 내적 포트폴리오
         table
           tr
             th 의뢰 번호
@@ -82,7 +84,7 @@ block content
               td= internal.j_rating
               td= internal.rfile
 
-        h2 외적 포트폴리오
+        h3 외적 포트폴리오
         a.btn(href=`/freelancer/${target.id}/external`) 조회
 
     if user.type=='admin'

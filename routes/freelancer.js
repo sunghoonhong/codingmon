@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 const { isLoggedIn, isNotLoggedIn, isAdmin } = require('./middlewares');
 const dbconfig = require('../config/database');
 const router = express.Router();
@@ -80,7 +81,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     var params = [
         name, phone_num, age, major, career
     ];
-    if(pw!='비밀번호') {
+    if(pw) {
         const hash = await bcrypt.hash(pw, 13);
         sql += ', password=?';
         params.push(hash);
@@ -121,6 +122,17 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        const [externals] = await conn.query(
+            `SELECT efile, fid FROM owns_external WHERE fid=?`,
+            req.body.targetId
+        );
+        var path;
+        for(i in externals) {
+            path = `./public/external/${req.body.targetId}/${externals[i].efile}`;
+            fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
+        }
+
+        // DB에서 프리랜서 삭제 (외적 포트폴리오는 CASCADE로 삭제)
         await conn.query(
             'DELETE FROM freelancer WHERE id=?',
             req.body.targetId
@@ -148,7 +160,8 @@ router.get('/:id/external', isLoggedIn, async (req, res, next) => {
             title: '외적 포트폴리오 목록',
             user: req.user,
             targetId: req.params.id,
-            externals: externals
+            externals: externals,
+            externalError: req.flash('externalError')
         });
     }
     catch (err) {

@@ -17,7 +17,9 @@ block content
             form(action=`/delete/external` method='post')
               input(type='hidden' name='pid' value=external.pid)
               button.btn(type='submit') X
-
+  if externalError
+    .error-message= externalError
+    
   if user.type == 'admin' || user.id == targetId
     h2 외적 포트폴리오 추가
     form(action=`/create/external/${targetId}` method='post' enctype='multipart/form-data')

@@ -53,11 +53,11 @@ html
         else
           form#login-form(action='/auth/login' method='post')
             .input-group
-              label(for='id') ID
-              input#id(name='id' required autofocus)
+              label(for='login-id') ID
+              input#login-id(name='id' required autofocus)
             .input-group
-              label(for='pw') PW
-              input#pw(type='password' name='pw' required)
+              label(for='login-pw') PW
+              input#login-pw(type='password' name='pw' required)
             if loginError
               .error-message= loginError
             button#login.btn(type='submit') 로그인

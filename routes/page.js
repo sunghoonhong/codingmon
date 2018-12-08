@@ -109,26 +109,25 @@ router.get('/profile/:id', isLoggedIn, async (req, res, next) => {
 router.get('/request/:rqid', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [request] = await conn.query(
+        const [[request]] = await conn.query(
             'SELECT * FROM request WHERE rqid=?',
             req.params.rqid
         );
-        if(!request.length) {
+        if(!request) {
             conn.release()
             console.log('해당 의뢰가 없습니다');
-            res.redirect('/');
+            return res.redirect('/');
         }
         const [requires] = await conn.query(
             'SELECT lang_name, level FROM requires WHERE rqid=?',
             req.params.rqid
         );
         conn.release();
-        console.log(requires);
         res.render('request_detail', {
             title: '나의 의뢰',
             user: req.user,
             target: req.user,
-            request: request[0],
+            request: request,
             requires: requires
         });        
     }
@@ -196,9 +195,20 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
 });
 
 // 특정 의뢰 삭제
-router.post('/request/delete', isAdmin, async (req, res, next) => {
+router.post('/request/delete', isAdmin, document_dir, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        // 의뢰 문서 파일 삭제
+        const [docs] = await conn.query(
+            `SELECT dfile, did FROM document WHERE rqid=?`,
+            req.body.targetId
+        );
+        var path;
+        for(i in docs) {
+            path = `./public/document/${req.body.targetId}/${docs[i].dfile}`;
+            fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
+        }
+        // DB에서 의뢰 삭제 (의뢰문서는 CASCADE로 삭제)
         await conn.query(
             'DELETE FROM request WHERE rqid=?',
             req.body.targetId
@@ -231,16 +241,28 @@ router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
     try {
         if(!req.file) {
             conn.release();
-            console.error('선택된 파일이 없습니다');
-            return res.redirect(`/profile/${req.params.fid}`);
+            req.flash('externalError', '선택된 파일이 없습니다');
+            return res.redirect(`/freelancer/${req.params.fid}/external`);
         }
+        // 이미 있는 파일 이름이면 무시
+        const [[exExt]] = await conn.query(
+            `SELECT * FROM owns_external WHERE efile=? AND fid=?`,
+            [req.file.originalname, req.params.fid]
+        );
+
+        if(exExt) {
+            conn.release();
+            req.flash('externalError', '이미 존재하는 파일입니다');
+            return res.redirect(`/freelancer/${req.params.fid}/external`);
+        }
+
         await conn.query(
             `INSERT INTO owns_external(efile, fid)
             VALUES(?, ?)`,
             [req.file.originalname, req.params.fid]
         );
         conn.release();
-        return res.redirect(`/profile/${req.params.fid}`);
+        return res.redirect(`/freelancer/${req.params.fid}/external`);
     }
     catch(err) {
         conn.release();
@@ -295,7 +317,8 @@ router.get('/request/:rqid/document', isLoggedIn, async (req, res, next) => {
             title: `${req.params.rqid}번 의뢰 문서`,
             user: req.user,
             rqid: req.params.rqid,
-            documents: documents
+            documents: documents,
+            documentError: req.flash('documentError')
         });
     }
     catch (err) {
@@ -326,15 +349,24 @@ router.post('/create/request/:rqid/document', isLoggedIn, document_dir, multer({
     try {
         if(!req.file) {
             conn.release();
-            console.error('선택된 파일이 없습니다');
-            return res.redirect(`/request/${req.params.rqid}`);
+            req.flash('documentError', '선택된 파일이 없습니다');
+            return res.redirect(`/request/${req.params.rqid}/document`);
+        }
+        const [[exDoc]] = await conn.query(
+            `SELECT * FROM document WHERE dfile=? AND rqid=?`,
+            [req.file.originalname, req.params.rqid]
+        );
+        if(exDoc) {
+            conn.release();
+            req.flash('documentError', '이미 존재하는 파일입니다');
+            return res.redirect(`/request/${req.params.rqid}/document`);
         }
         await conn.query(
             `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
             [req.file.originalname, req.params.rqid]
         );
         conn.release();
-        return res.redirect(`/request/${req.params.rqid}`);
+        return res.redirect(`/request/${req.params.rqid}/document`);
     }
     catch (err) {
         conn.release();
