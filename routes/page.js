@@ -396,7 +396,8 @@ router.post('/delete/document', isLoggedIn, document_dir, async (req, res, next)
         }
         const { dfile, did } = document;
         const path = `./public/document/${did}/${dfile}`;
-        fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
+        if(fs.existsSync(path))
+            fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
         await conn.query(
             `DELETE FROM document WHERE did=?`,
             req.body.did
