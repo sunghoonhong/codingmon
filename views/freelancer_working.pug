@@ -7,7 +7,7 @@ block content
     .error-message= submitError
   
   h3 개발 중인 의뢰
-  #submit-form
+  h4#submit-form
   table
     tr
       th 의뢰 번호
@@ -80,12 +80,12 @@ block script
       var rqidInput = document.createElement('input');
       var rfileInput = document.createElement('input');
       var submitBtn = document.createElement('button');
-      document.querySelector('#submit-form').innerText = e.target.dataset.rqid + '번 완료신청 결과보고서';
+      document.querySelector('#submit-form').innerText = e.target.dataset.rqid + '번 의뢰 완료신청 결과보고서';
 
       submitForm.action = '/freelancer/report/submit';
       submitForm.method = 'post';
       
-      submitGroup.class = 'input-group';
+      submitGroup.className = 'input-group';
       submitGroup.id = 'submit-group';
       
       rqidInput.type = 'hidden';
@@ -95,9 +95,10 @@ block script
 
       rfileInput.name = 'rfile';
       rfileInput.placeholder = '결과 보고서 제목을 입력하세요';
+      rfileInput.toggleAttribute('required');
       submitGroup.appendChild(rfileInput);
 
-      submitBtn.class = 'btn';
+      submitBtn.className = 'btn';
       submitBtn.type = 'submit';
       submitBtn.textContent = '제출';
       submitGroup.appendChild(submitBtn);

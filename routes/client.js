@@ -103,7 +103,7 @@ router.get('/request', isLoggedIn, async (req, res, next) => {
 
 
 // 특정 의뢰의 정보
-router.get('/request/:rqid', async (req, res, next) => {
+router.get('/request/:rqid', (req, res, next) => {
     res.redirect('/request/'+req.params.rqid);
 })
 
@@ -157,6 +157,7 @@ router.post('/request/:rqid/apply', async (req, res, next) => {
         );
         if(request.dev_start) {
             req.flash('applyError', '이미 선택된 의뢰입니다');
+            conn.release();
             return res.redirect(`/client/request/${rqid}/apply`);
         }
         // 수락한거 status = accepted
@@ -300,7 +301,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
             ORDER BY ${req.query.orderType}`,
             req.user.id
         );
-        // console.log(requests);
+        conn.release();
         res.render('client_working', {
             title: '진행 중인 의뢰',
             user: req.user,
@@ -309,6 +310,7 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.error(err);
         next(err);
     }
@@ -345,7 +347,7 @@ router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
 */
 
 // 특정 의뢰완료요청에 대해 수락할 시 평점 지정 양식
-router.get('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
+router.get('/report/:rid/accept', isLoggedIn, (req, res, next) => {
     try {
         res.render('client_accept', {
             title: '요청 수락',
@@ -354,7 +356,6 @@ router.get('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
-        conn.release();
         next(err);
     }
 });
@@ -398,7 +399,7 @@ router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
 */
 
 // 특정 의뢰완료요청에 대해 거절할 시 거절 메시지 입력 양식
-router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
+router.get('/report/:rid/decline', isLoggedIn, (req, res, next) => {
     try {
         res.render('client_decline', {
             title: '요청 거부',
@@ -407,7 +408,6 @@ router.get('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
         });
     }
     catch (err) {
-        conn.release();
         next(err);
     }
 });
@@ -428,6 +428,7 @@ router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
             `INSERT INTO declined VALUES (?, ?)`,
             [req.params.rid, req.body.message]
         );
+        conn.release();
         return res.redirect('/');
     }
     catch (err) {
@@ -438,7 +439,7 @@ router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
 
 
 // 의뢰자의 홈페이지
-router.get('/', async (req, res, next) => {
+router.get('/', (req, res, next) => {
     try {
         res.render('main', {
             title: 'CodingMon - DBDBDIP @ client',
@@ -447,7 +448,8 @@ router.get('/', async (req, res, next) => {
         });
     }
     catch (err) {
-        console.log(err);
+        console.error(err);
+        next(err);
     }
 });
 

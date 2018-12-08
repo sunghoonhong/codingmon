@@ -230,7 +230,6 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
     }
 });
 
-
 // 신청한 의뢰목록 조회
 router.get('/waiting', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
@@ -368,7 +367,7 @@ router.get('/accepted', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [acceptances] = await conn.query(
-            `SELECT ac.*, req.rname, rep.rfile
+            `SELECT ac.*, req.rqid, req.cid, req.rname, rep.rfile
             FROM freelancer f, job_seeker j, report rep, accepted ac, request req
             WHERE f.id = ? AND f.job_seeker_id = j.job_seeker_id AND
             j.job_seeker_id = rep.job_seeker_id AND rep.rid = ac.arid AND
