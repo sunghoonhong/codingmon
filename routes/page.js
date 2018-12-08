@@ -3,12 +3,13 @@ const mysql = require('mysql2/promise');
 const multer = require('multer');
 const fs = require('fs');
 const { isLoggedIn, isNotLoggedIn, isAdmin } = require('./middlewares');
-const { external_dir } = require('./preprocess');
+const { external_dir, document_dir } = require('./preprocess');
 const dbconfig = require('../config/database');
 const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
+// 회원가입 양식
 router.get('/join', isNotLoggedIn, async (req, res) => {
     var title = '회원가입';
     if(req.body.joinType) {
@@ -22,6 +23,7 @@ router.get('/join', isNotLoggedIn, async (req, res) => {
     });
 });
 
+// 회원가입 처리
 router.post('/join', isNotLoggedIn, async (req, res) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -43,7 +45,8 @@ router.post('/join', isNotLoggedIn, async (req, res) => {
     }
 });
 
-router.get('/profile/:id', async (req, res, next) => {
+// 특정 사용자(프리랜서, 의뢰자 모두)의 정보 조회
+router.get('/profile/:id', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [exFree] = await conn.query(
@@ -102,7 +105,8 @@ router.get('/profile/:id', async (req, res, next) => {
     }
 })
 
-router.get('/request/:rqid', async (req, res, next) => {
+// 특정 의뢰 정보 조회
+router.get('/request/:rqid', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [request] = await conn.query(
@@ -135,7 +139,8 @@ router.get('/request/:rqid', async (req, res, next) => {
     }
 });
 
-router.post('/request/update', isAdmin, async (req, res, next) => {
+// 특정 의뢰 정보 수정
+router.post('/request/update', isLoggedIn, async (req, res, next) => {
     const { 
         rqid, cid, rname,
         reward, min_people, max_people, min_career,
@@ -190,6 +195,7 @@ router.post('/request/update', isAdmin, async (req, res, next) => {
     }
 });
 
+// 특정 의뢰 삭제
 router.post('/request/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -207,6 +213,11 @@ router.post('/request/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+/*
+    외적 포트폴리오 관련
+*/
+
+// 특정 프리랜서의 외적 포트폴리오 추가
 router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
@@ -233,6 +244,7 @@ router.post('/create/external/:fid', isLoggedIn, external_dir, multer({
     }
 })
 
+// 특정 외적 포트폴리오 삭제
 router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -242,11 +254,11 @@ router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next)
         );
         if(!external) {
             conn.release();
-            return res.status(403).send('해당 외부 포트폴리오가 없습니다');
+            return res.status(403).send('해당 외적 포트폴리오가 없습니다');
         }
         const { efile, fid } = external;
         const path = `./public/external/${fid}/${efile}`;
-        fs.unlinkSync(path, (err) => console.error('외부 포트폴리오 삭제 실패', err));
+        fs.unlinkSync(path, (err) => console.error('외적 포트폴리오 삭제 실패', err));
         await conn.query(
             `DELETE FROM owns_external WHERE pid=?`,
             req.body.pid
@@ -259,8 +271,97 @@ router.post('/delete/external', isLoggedIn, external_dir, async (req, res, next)
         console.error(err);
         next(err);
     }
+});
+
+/*
+    의뢰문서 관련
+*/
+
+// 특정 의뢰의 의뢰문서 조회
+router.get('/request/:rqid/document', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [documents] = await conn.query(
+            `SELECT did, dfile FROM document WHERE rqid=?`,
+            req.params.rqid
+        );
+        conn.release();
+        res.render('request_document', {
+            title: `${req.params.rqid}번 의뢰 문서`,
+            user: req.user,
+            rqid: req.params.rqid,
+            documents: documents
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
 })
 
+// 특정 의뢰문서 다운로드
+router.get('/request/document/:rqid/:dfile', isLoggedIn, (req, res, next) => {
+    return res.sendFile(`${req.params.dfile}`, {
+        root: `public/document/${req.params.rqid}/`
+    });
+});
+
+// 특정 의뢰의 의뢰문서 추가
+router.post('/create/request/:rqid/document', isLoggedIn, document_dir, multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, `public/document/${req.params.rqid}`)
+        },
+        filename: (req, file, cb) => {
+            cb(null, file.originalname)
+        }
+    })}).single('dfile'), async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        await conn.query(
+            `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
+            [req.file.originalname, req.params.rqid]
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+// 특정 의뢰문서 삭제
+router.post('/delete/document', isLoggedIn, document_dir, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[document]] = await conn.query(
+            `SELECT dfile, did FROM document WHERE did=?`,
+            req.body.did
+        );
+        if(!document) {
+            conn.release();
+            return res.status(403).send('해당 의뢰 문서가 없습니다');
+        }
+        const { dfile, did } = document;
+        const path = `./public/document/${did}/${dfile}`;
+        fs.unlinkSync(path, (err) => console.error('의뢰 문서 삭제 실패', err));
+        await conn.query(
+            `DELETE FROM document WHERE did=?`,
+            req.body.did
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch(err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+// 홈페이지
 router.get('/', async (req, res, next) => {
     try {
         if (!req.user) {

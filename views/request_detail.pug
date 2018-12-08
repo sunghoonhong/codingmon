@@ -59,6 +59,9 @@ block content
     form(action='/request/delete', method='post')
       input(type='hidden' name='targetId' value=request.rqid)
       button.btn(type='submit') 삭제
+      
+  h3 의뢰 문서
+    a.btn(href=`/request/${request.rqid}/document`) 조회
 
 block script
   if user && user.type == 'admin'

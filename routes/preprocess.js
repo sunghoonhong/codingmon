@@ -15,7 +15,7 @@ exports.external_dir = (req, res, next) => {
 exports.document_dir = (req, res, next) => {
     const dirname =`/public/document/${req.params.rqid}`;
     try {
-        false.ensuerDirSync('./' + dirname);
+        fs.ensureDirSync('./' + dirname);
         next();
     }
     catch (err) {
