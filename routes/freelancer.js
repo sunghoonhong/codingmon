@@ -443,6 +443,7 @@ router.get('/', async (req, res, next) => {
         });
     }
     catch (err) {
+        conn.release();
         console.log(err);
         next(err);
     }
