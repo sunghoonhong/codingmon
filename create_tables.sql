@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS freelancer (
 
 CREATE TABLE IF NOT EXISTS team (
     tname VARCHAR(20) NOT NULL,
-    career INT NOT NULL,
+    career INT,
     mgr_id VARCHAR(20) NOT NULL,
-    people_num INT NOT NULL,
+    people_num INT DEFAULT 0,
     job_seeker_id INT NOT NULL,
     PRIMARY KEY (tname),
     FOREIGN KEY (mgr_id)
