@@ -25,6 +25,8 @@ block content
         if user.type == 'admin' || target.id == user.id
           button#update-profile.btn(type='button') 수정
           input#update-submit.btn(type='hidden' value='저장')
+          if updateError
+            .error-message= updateError
 
     else if target.type == 'freelancer'
       form#profile-form(action='/'+target.type+'/profile/update' method='post')

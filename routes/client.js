@@ -61,6 +61,21 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        /*
+            진행중인의뢰가 있으면 삭제 불가
+        */
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM client c, request r
+            WHERE c.id=r.cid AND r.dev_start is NOT NULL
+            AND r.dev_end is NULL AND c.id=?`,
+            req.body.targetId
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
+            return res.redirect(`/profile/${req.body.targetId}`);
+        }
+
         await conn.query(
             'DELETE FROM client WHERE id=?',
             req.body.targetId
