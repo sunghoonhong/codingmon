@@ -122,6 +122,20 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        // 진행중인의뢰가 있으면 삭제 불가
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM freelancer f, request rq, applys ap 
+            WHERE rq.rqid=ap.rqid AND ap.job_seeker_id=f.job_seeker_id
+            AND ap.status='accepted' AND rq.dev_start is NOT NULL AND rq.dev_end is NULL
+            AND f.id=?`,
+            req.body.targetId
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
+            return res.redirect(`/profile/${req.body.targetId}`);
+        }
+
         const [externals] = await conn.query(
             `SELECT efile, fid FROM owns_external WHERE fid=?`,
             req.body.targetId
