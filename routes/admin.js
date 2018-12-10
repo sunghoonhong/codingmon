@@ -170,7 +170,8 @@ router.get('/team', isAdmin, async (req, res, next) => {
         res.render('admin_team_list', {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
-            teams: teams
+            teams: teams,
+            teamError: req.flash('teamError')
         });
         conn.release();
     }
@@ -182,7 +183,7 @@ router.get('/team', isAdmin, async (req, res, next) => {
 });
 
 
-// 특정 팀 삭제
+// 특정 팀 조회
 router.get('/team/:tname', isAdmin, async (req, res, next) => {
     const tname = req.params.tname;
     const conn = await pool.getConnection(async conn => conn);
@@ -190,12 +191,6 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
         const [[team]] = await conn.query(
             'SELECT * FROM team WHERE tname=?', tname
         );
-        if(!team) {
-            res.render('alert', {
-                title: '경고 메시지',
-                message: '그런 팀은 없습니다'
-            });
-        }
         const [members] = await conn.query(
             'SELECT fid FROM participates WHERE tname=?',
             tname
@@ -205,7 +200,8 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
             team: team,
-            members: members
+            members: members,
+            teamError: req.flash('teamError')
         });
     }
     catch (err) {
@@ -221,7 +217,7 @@ router.get('/report', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [declineds] = await conn.query(
-            `SELECT rp.rid, rq.rqid, rq.rname, rp.rfile 
+            `SELECT rp.rid, rq.rqid, rq.rname, rp.rfile, de.message
             FROM report rp, request rq, declined de
             WHERE rp.rid = de.drid AND rp.rqid = rq.rqid`
         );

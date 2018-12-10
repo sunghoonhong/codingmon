@@ -10,7 +10,7 @@ block content
   else if user.type == 'freelancer'
     h2 프리랜서 모드
     for alarm in alarms
-      p=`의뢰자 ${alarm.name}님이 ${alarm.rqid}번 의뢰에 대해 완료를 수락하였습니다.`
+      p= `의뢰자 ${alarm.id}님이 ${alarm.rqid}번 의뢰에 대해 완료를 수락하였습니다.`
     if (alarms[0])
       a.btn(href='/freelancer/accepted') 평점 매기러 바로가기
 

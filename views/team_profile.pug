@@ -1,6 +1,9 @@
 extends layout
 
 block content
+  if teamError
+    .error-message= teamError
+    
   label(for='tname') 팀 이름
   div#tname= team.tname
 

@@ -2,6 +2,8 @@ extends layout
 
 block content
   h2 팀 관리
+  if teamError
+    .error-message= teamError
   table
     thead
       tr

@@ -2,6 +2,9 @@ extends layout
 
 block content
   h2 의뢰 정보
+  if adminError
+    .error-message= adminError
+    
   form#profile-form(action='/request/update' method='post')
     .input-group
       label(for='rqid') 의뢰번호

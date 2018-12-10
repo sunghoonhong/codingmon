@@ -22,6 +22,7 @@ block content
           td= freelancer.rating
           td
             form(action=`/client/request/${rqid}/apply` method='post')
+              input(type='hidden' name='job_seeker_type' value='freelancer')
               input(type='hidden' name='job_seeker_id' value=freelancer.job_seeker_id)
               button.btn(type='submit') 선택
   h2 팀
@@ -40,5 +41,6 @@ block content
           td= team.rating
           td
             form(action=`/client/request/${rqid}/apply` method='post')
+              input(type='hidden' name='job_seeker_type' value='team')
               input(type='hidden' name='job_seeker_id' value=team.job_seeker_id)
               button.btn(type='submit') 선택

@@ -61,6 +61,21 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        /*
+            진행중인의뢰가 있으면 삭제 불가
+        */
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM client c, request r
+            WHERE c.id=r.cid AND r.dev_start is NOT NULL
+            AND r.dev_end is NULL AND c.id=?`,
+            req.body.targetId
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
+            return res.redirect(`/profile/${req.body.targetId}`);
+        }
+
         await conn.query(
             'DELETE FROM client WHERE id=?',
             req.body.targetId
@@ -118,16 +133,14 @@ router.get('/request/:rqid/apply', async (req, res, next) => {
     try {
         const[freelancers] = await conn.query(
             `SELECT f.*
-            FROM request req, freelancer f, job_seeker j, applys a
-            WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
-            AND f.job_seeker_id = a.job_seeker_id`,
+            FROM request req, freelancer f, applys a
+            WHERE req.rqid =? AND a.rqid = req.rqid AND f.job_seeker_id = a.job_seeker_id`,
             rqid
         );
         const[teams] = await conn.query(
             `SELECT t.*
-            FROM request req, team t, job_seeker j, applys a
-            WHERE req.rqid =? AND a.rqid = req.rqid AND j.job_seeker_id = a.job_seeker_id
-            AND t.job_seeker_id = a.job_seeker_id`,
+            FROM request req, team t, applys a
+            WHERE req.rqid =? AND a.rqid = req.rqid AND t.job_seeker_id = a.job_seeker_id`,
             rqid
         );
         conn.release();
@@ -149,7 +162,7 @@ router.get('/request/:rqid/apply', async (req, res, next) => {
 // 특정 의뢰에 신청한 사람들 중 선택
 router.post('/request/:rqid/apply', async (req, res, next) => {
     const rqid = req.params.rqid;
-    const job_seeker_id = req.body.job_seeker_id;
+    const {job_seeker_type, job_seeker_id} = req.body;
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [[request]] = await conn.query(
@@ -162,15 +175,15 @@ router.post('/request/:rqid/apply', async (req, res, next) => {
         }
         // 수락한거 status = accepted
         await conn.query(
-            `UPDATE request req, applys a, job_seeker j, freelancer f
+            `UPDATE request req, applys a
             SET a.status = 'accepted', req.dev_start = now()
-            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.job_seeker_id = j.job_seeker_id
-            AND j.job_seeker_id = f.job_seeker_id AND f.job_seeker_id = ?`,
+            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.job_seeker_id = ?`,
             [rqid, job_seeker_id]
         );
         // 나머지는 전부 status = decliend
         await conn.query(
-            `UPDATE request req, applys a, job_seeker j, freelancer f SET a.status = 'declined'
+            `UPDATE request req, applys a
+            SET a.status = 'declined'
             WHERE req.rqid = ? AND req.rqid = a.rqid AND a.status = 'waiting'`,
             rqid
         );
@@ -298,11 +311,18 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const [requests] = await conn.query(
+        const [free_requests] = await conn.query(
             `SELECT R.rqid, R.rname, R.start_date, R.dev_start, R.reward, F.id as fid
-            FROM request R,freelancer F, job_seeker J, applys A
-            WHERE R.cid = ? AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id
+            FROM request R, freelancer F, applys A
+            WHERE R.cid = ? AND F.job_seeker_id = A.job_seeker_id
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
+        );
+        const [team_requests] = await conn.query(
+            `SELECT R.rqid, R.rname, R.start_date, R.dev_start, R.reward, T.tname
+            FROM request R, team T, applys A
+            WHERE R.cid = ? AND T.job_seeker_id = A.job_seeker_id
             AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL
             ORDER BY ${req.query.orderType}`,
             req.user.id
@@ -311,7 +331,8 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
         res.render('client_working', {
             title: '진행 중인 의뢰',
             user: req.user,
-            requests: requests,
+            free_requests: free_requests,
+            team_requests: team_requests,
             orderType: req.query.orderType
         });
     }
@@ -327,18 +348,17 @@ router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const[reports] = await conn.query(
-            `SELECT f.id as fid, rep.rfile, rep.rid
-            FROM request req, freelancer f, report rep
-            WHERE req.rqid = rep.rqid AND rep.status = 'waiting'
-            AND rep.job_seeker_id = f.job_seeker_id AND req.rqid = ?`,
+        const[[report]] = await conn.query(
+            `SELECT rep.rfile, rep.rid
+            FROM request req, report rep
+            WHERE req.rqid = rep.rqid AND rep.status = 'waiting' AND req.rqid = ?`,
             rqid
         );
         conn.release();
         res.render('client_complete', {
             title: '의뢰완료 요청',
             user: req.user,
-            reports: reports,
+            report: report,
             rqid: req.params.rqid
         });
     }
