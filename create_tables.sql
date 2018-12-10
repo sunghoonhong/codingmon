@@ -205,26 +205,3 @@ CREATE TABLE IF NOT EXISTS owns_internal (
         REFERENCES accepted (arid)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-
-
- CREATE TABLE IF NOT EXISTS f_rating_stat (
-    id VARCHAR(20) NOT NULL,
-    rating_sum float(7,2) DEFAULT 0,
-	count_sum INT DEFAULT 0,
-	avg_rating float(7,2),
-    PRIMARY KEY (id),
-    FOREIGN KEY (id)
-        REFERENCES freelancer (id)
-        ON DELETE CASCADE ON UPDATE CASCADE	
-);
-
- CREATE TABLE IF NOT EXISTS c_rating_stat (
-    id VARCHAR(20) NOT NULL,
-    rating_sum float(7,2) DEFAULT 0,
-	count_sum INT DEFAULT 0,
-	avg_rating float(7,2),
-    PRIMARY KEY (id),
-    FOREIGN KEY (id)
-        REFERENCES client (id)
-        ON DELETE CASCADE ON UPDATE CASCADE	
-);
