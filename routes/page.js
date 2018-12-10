@@ -128,7 +128,8 @@ router.get('/request/:rqid', isLoggedIn, async (req, res, next) => {
             user: req.user,
             target: req.user,
             request: request,
-            requires: requires
+            requires: requires,
+            adminError: req.flash('adminError')
         });        
     }
     catch (err) {
@@ -147,11 +148,22 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
     } = req.body;   // 기본 정보 11개
     try {
         if(start_date > end_date || min_people > max_people) {
-            return res.render('alert', {
-                title: '에러',
-                message: '입력이 이상합니다'
-            });
+            console.error('입력이 이상합니다');
+            req.flash('adminError', '입력이 이상합니다');
+            return res.redirect(`/request/${req.body.targetId}`);
         }
+        // 진행중인의뢰면 수정 불가
+        const [[exReq]] = await conn.query(
+            `SELECT dev_start, dev_end FROM request WHERE rqid=?`,
+            req.body.targetId
+        );
+
+        if(exReq.dev_start && !exReq.dev_end) {
+            console.error('현재 진행 중인 의뢰입니다');
+            req.flash('adminError', '현재 진행 중인 의뢰는 수정할 수 없습니다');
+            return res.redirect(`/request/${req.body.targetId}}`);
+        }
+        
     }
     catch (err) {
         next(err);
@@ -198,6 +210,19 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
 router.post('/request/delete', isAdmin, document_dir, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        // 진행중인의뢰면 삭제 불가
+        const [[exReq]] = await conn.query(
+            `SELECT dev_start, dev_end FROM request WHERE rqid=?`,
+            req.body.targetId
+        );
+
+        if(exReq.dev_start && !exReq.dev_end) {
+            console.error('현재 진행 중인 의뢰입니다');
+            req.flash('adminError', '현재 진행 중인 의뢰는 삭제할 수 없습니다');
+            return res.redirect(`/request/${req.body.targetId}}`);
+        }
+        
+
         // 의뢰 문서 파일 삭제
         const [docs] = await conn.query(
             `SELECT dfile, did FROM document WHERE rqid=?`,
