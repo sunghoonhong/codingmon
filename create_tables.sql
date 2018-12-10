@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS request (
     min_career INT NOT NULL,
     FOREIGN KEY (cid)
         REFERENCES client (id)
-        ON UPDATE NO ACTION ON DELETE NO ACTION,/* changed1210 */
+        ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY (rqid)
 );
 
@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS document (
     dfile VARCHAR(100) NOT NULL,
     rqid INT NOT NULL,
     FOREIGN KEY (rqid)
-        REFERENCES request (rqid),
+        REFERENCES request (rqid)
+        ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY (did)
 );
 
@@ -180,6 +181,7 @@ CREATE TABLE IF NOT EXISTS owns_external (
     PRIMARY KEY (pid),
     FOREIGN KEY (fid)
         REFERENCES freelancer (id)
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS owns_internal (

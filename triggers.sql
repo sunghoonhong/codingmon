@@ -1,4 +1,4 @@
-    /* before_job_seeker_delete */
+   /* before_job_seeker_delete */
  DELIMITER $$
  create trigger before_job_seeker_delete
  BEFORE DELETE ON job_seeker
@@ -10,7 +10,7 @@
  DELIMITER ;
  
        /* after_client_delete */
- DELIMITER $$
+ /*DELIMITER $$
  create trigger after_client_delete
  AFTER DELETE ON client
  FOR EACH ROW
@@ -18,7 +18,7 @@
 	DELETE FROM request where request.cid = old.id;
  
  END $$
- DELIMITER ;
+ DELIMITER ;*/
  
       /* before_request_delete  */
  DELIMITER $$
@@ -184,3 +184,5 @@ BEGIN
 	
 END $$
 DELIMITER ;
+
+/* testing zone */
