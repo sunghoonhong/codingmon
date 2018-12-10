@@ -11,14 +11,17 @@ block content
         th 의뢰번호
         th 의뢰제목
         th 결과보고서
+        th 거절메시지
         th 삭제
     tbody  
       for declined in declineds
         tr
           td= declined.rid
-          td= declined.rqid
+          td
+            a(href=`/request/${declined.rqid}`)= declined.rqid
           td= declined.rname
           td= declined.rfile
+          td= declined.message
           td
             form(action='/admin/delete/declined/' method='post')
               input(type='hidden' name='drid' value=declined.rid)
