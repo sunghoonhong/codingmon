@@ -26,7 +26,8 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
             title: '팀 정보',
             user: req.user,
             team: team,
-            members: members
+            members: members,
+            teamError: req.flash('teamError')
         });
     }
     catch (err) {
@@ -43,6 +44,22 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
     } = req.body;
     const conn = await pool.getConnection(async conn => conn);
     try {
+        // 진행중인 의뢰가 있으면 변경불가
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM team t, request rq, applys ap 
+            WHERE rq.rqid=ap.rqid AND ap.job_seeker_id=t.job_seeker_id
+            AND ap.status='accepted' AND rq.dev_start IS NOT NULL AND rq.dev_end IS NULL
+            AND tname=?`,
+            tname
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('teamError', '진행 중인 의뢰가 있습니다');
+            if (req.user.type=='admin')
+                return res.redirect(`/admin/team`);
+            else
+                return res.redirect(`/team/${tname}`);
+        }
         await conn.query(
             'DELETE FROM participates WHERE tname=? AND fid=?',
             [tname, banId]
@@ -67,7 +84,23 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
 router.post('/delete', isLoggedIn, async(req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
-        // 의뢰 진행중인지 체크할 필요가 있다!! --- 보류...
+        // 진행중인의뢰가 있으면 삭제 불가
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM team t, request rq, applys ap 
+            WHERE rq.rqid=ap.rqid AND ap.job_seeker_id=t.job_seeker_id
+            AND ap.status='accepted' AND rq.dev_start IS NOT NULL AND rq.dev_end IS NULL
+            AND tname=?`,
+            req.body.tname
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('teamError', '진행 중인 의뢰가 있는 팀은 삭제할 수 없습니다');
+            if (req.user.type=='admin')
+                return res.redirect(`/admin/team`);
+            else
+                return res.redirect(`/team/${req.body.tname}`);
+        }
+        // 삭제
         await conn.query(
             'DELETE FROM team WHERE tname=?',
             req.body.tname
