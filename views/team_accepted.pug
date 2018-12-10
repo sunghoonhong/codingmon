@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  h2 그는 아직도 기다리고 있다...
+  table
+    thead
+      tr
+        th 의뢰번호
+        th 의뢰자 ID
+        th 의뢰 이름
+        th 보고서
+        th 의뢰자가 준 평점
+        th 우리가 줄 평점
+    tbody
+      for accept in acceptances
+        tr
+          td
+            a(href=`/request/${accept.rqid}`)= accept.rqid
+          td
+            a(href=`/profile/${accept.cid}`)= accept.cid
+          td= accept.rname
+          td= accept.rfile
+          td= accept.j_rating
+          td
+            form(action=`/team/${tname}/accepted` method='post')
+                input#rating(type='number' name='rating' min=0 max=5 placeholder='0~5' required)
+                input(type='hidden' name='rid' value=accept.arid)
+                button.btn(type='submit') 확인

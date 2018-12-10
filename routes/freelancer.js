@@ -235,8 +235,8 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
             WHERE R.dev_start IS NULL AND R.min_people <= 1 AND F.career >= R.min_career
             AND R.rqid = ? AND F.id = ?
             AND NOT EXISTS
-            (SELECT * FROM job_seeker J, knows K, requires req, program_lang pl
-            WHERE F.job_seeker_id = J.job_seeker_id AND J.job_seeker_id = K.job_seeker_id
+            (SELECT * FROM knows K, requires req, program_lang pl
+            WHERE F.job_seeker_id = K.job_seeker_id
             AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
             AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)`,
             [req.body.rqid, req.user.id, req.user.id]
@@ -268,9 +268,8 @@ router.get('/waiting', isLoggedIn, async (req, res, next) => {
     try {
         const [requests] = await conn.query(
             `SELECT R.rqid, R.rname, R.cid, R.start_date, R.reward, A.status
-            FROM request R,client C,freelancer F, job_seeker J, applys A
-            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND F.id=?
+            FROM request R,client C, freelancer F, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND F.id=?
             ORDER BY A.status DESC`, req.user.id
         );
         conn.release();
@@ -293,27 +292,24 @@ router.get('/working', isLoggedIn, async (req, res, next) => {
     try {
         const [devs] = await conn.query(
             `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
-            FROM request R,client C,freelancer F, job_seeker J, applys A
-            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id AND F.id=?
+            FROM request R, client C,freelancer F, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = A.job_seeker_id AND F.id=?
             AND NOT EXISTS(SELECT * FROM report rep WHERE R.rqid=rep.rqid)
             AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL`,
             req.user.id
         );
         const [waitings] = await conn.query(
             `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
-            FROM request R,client C,freelancer F, job_seeker J, applys A
-            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
+            FROM request R, client C, freelancer F, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
             AND (SELECT rep.status FROM report rep WHERE R.rqid=rep.rqid ORDER BY rep.rid DESC LIMIT 1)='waiting'
             AND R.dev_end IS NULL AND F.id=?`,
             req.user.id
         );
         const [declineds] = await conn.query(
             `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
-            FROM request R,client C,freelancer F, job_seeker J, applys A
-            WHERE R.cid = C.id AND F.job_seeker_id = J.job_seeker_id 
-            AND J.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
+            FROM request R, client C, freelancer F, applys A
+            WHERE R.cid = C.id AND F.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
             AND (SELECT rep.status FROM report rep WHERE R.rqid=rep.rqid ORDER BY rep.rid DESC LIMIT 1)='declined'
             AND R.dev_end IS NULL AND F.id=?`,
             req.user.id
@@ -400,10 +396,9 @@ router.get('/accepted', isLoggedIn, async (req, res, next) => {
     try {
         const [acceptances] = await conn.query(
             `SELECT ac.*, req.rqid, req.cid, req.rname, rep.rfile
-            FROM freelancer f, job_seeker j, report rep, accepted ac, request req
-            WHERE f.id = ? AND f.job_seeker_id = j.job_seeker_id AND
-            j.job_seeker_id = rep.job_seeker_id AND rep.rid = ac.arid AND
-            rep.rqid = req.rqid AND ac.c_rating is NULL`,
+            FROM freelancer f, report rep, accepted ac, request req
+            WHERE f.id = ? AND f.job_seeker_id = rep.job_seeker_id
+            AND rep.rid = ac.arid AND rep.rqid = req.rqid AND ac.c_rating is NULL`,
             req.user.id
         );
         conn.release();
@@ -447,9 +442,8 @@ router.get('/', async (req, res, next) => {
     try {
         const [alarms] = await conn.query(
             `SELECT rq.rqid, c.id
-            FROM freelancer f, job_seeker j, request rq, report rp, accepted ac, client c
-            WHERE f.id = ? AND f.job_seeker_id = j.job_seeker_id
-            AND j.job_seeker_id =rp.job_seeker_id AND rp.rid = ac.arid
+            FROM freelancer f, request rq, report rp, accepted ac, client c
+            WHERE f.id = ? AND f.job_seeker_id = rp.job_seeker_id AND rp.rid = ac.arid
             AND rp.rqid = rq.rqid AND rq.cid = c.id AND ac.c_rating is NULL`,
             req.user.id
         );
