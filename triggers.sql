@@ -1,49 +1,3 @@
-
- 
- 
-/* after_owns_internal_insert */ 
- DELIMITER $$
- create trigger after_owns_internal_insert
- AFTER INSERT ON owns_internal
- FOR EACH ROW
- BEGIN
-	declare newrating float(7,2);
-	
-	select AVG(j_rating) into newrating from accepted ar, owns_internal oi
-	where oi.fid = new.fid and oi.arid = ar.arid;
- 
- 
-	update freelancer
-	set
-	rating = newrating
-	where id = new.fid;
- 
- END $$
- DELIMITER ;
-
-  /* after_owns_internal_delete */ 
-  
-  
- DELIMITER $$
- create trigger after_owns_internal_delete
- AFTER DELETE ON owns_internal
- FOR EACH ROW
- BEGIN
-	declare newrating float(7,2);
-	
-	select AVG(j_rating) into newrating from accepted ar, owns_internal oi
-	where oi.fid = old.fid and oi.arid = ar.arid;
- 
- 
-	update freelancer
-	set
-	rating = newrating
-	where id = old.fid;
- 
- END $$
- DELIMITER ;
-
-
     /* before_job_seeker_delete */
  DELIMITER $$
  create trigger before_job_seeker_delete
@@ -55,10 +9,10 @@
  END $$
  DELIMITER ;
  
-       /* before_client_delete */
+       /* after_client_delete */
  DELIMITER $$
- create trigger before_client_delete
- BEFORE DELETE ON client
+ create trigger after_client_delete
+ AFTER DELETE ON client
  FOR EACH ROW
  BEGIN
 	DELETE FROM request where request.cid = old.id;
@@ -66,7 +20,7 @@
  END $$
  DELIMITER ;
  
-      /* before_request_delete */
+      /* before_request_delete  */
  DELIMITER $$
  create trigger before_request_delete
  BEFORE DELETE ON request
@@ -99,6 +53,29 @@
  END $$
  DELIMITER ;
 
+   /* after_accepted_delete */
+ DELIMITER $$
+ create trigger after_accepted_delete
+ AFTER DELETE ON accepted
+ FOR EACH ROW
+ BEGIN
+	declare theclientid varchar(100);
+	declare newrating float(7,2);
+	
+	select req.cid into theclientid from report rep, request req
+	where rep.rid = OLD.arid and req.rqid = rep.rqid;
+	select avg(c_rating) into newrating from accepted ar, report rep, request req
+	where req.cid = theclientid and rep.rqid = req.rqid and ar.arid = rep.rid;
+ 
+ 	update client
+	set
+	rating = newrating
+	where id = theclientid;
+	
+ 
+ END $$
+ DELIMITER ;
+ 
    /* after_accepted_update */
  DELIMITER $$
  create trigger after_accepted_update
@@ -117,6 +94,49 @@
 	set
 	rating = newrating
 	where id = theclientid;
+ 
+ END $$
+ DELIMITER ;
+
+ 
+ /* after_owns_internal_insert */ 
+ DELIMITER $$
+ create trigger after_owns_internal_insert
+ AFTER INSERT ON owns_internal
+ FOR EACH ROW
+ BEGIN
+	declare newrating float(7,2);
+	
+	select AVG(j_rating) into newrating from accepted ar, owns_internal oi
+	where oi.fid = new.fid and oi.arid = ar.arid;
+ 
+ 
+	update freelancer
+	set
+	rating = newrating
+	where id = new.fid;
+ 
+ END $$
+ DELIMITER ;
+
+  /* after_owns_internal_delete */ 
+ DELIMITER $$
+ create trigger after_owns_internal_delete
+ AFTER DELETE ON owns_internal
+ FOR EACH ROW
+ BEGIN
+	declare newrating float(7,2);
+	
+
+	select AVG(j_rating) into newrating from accepted ar, owns_internal oi
+	where oi.fid = old.fid and oi.arid = ar.arid;
+
+	update freelancer
+	set
+	rating = newrating
+	where id = old.fid;
+
+ 
  
  END $$
  DELIMITER ;

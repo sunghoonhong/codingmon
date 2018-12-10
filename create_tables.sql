@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS request (
     min_career INT NOT NULL,
     FOREIGN KEY (cid)
         REFERENCES client (id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+        ON UPDATE NO ACTION ON DELETE NO ACTION,/* changed1210 */
     PRIMARY KEY (rqid)
 );
 
