@@ -556,6 +556,7 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
 // 팀장이 특정 팀을 선택했을 때 그 팀과 관련된 행동을 할 수 있는 팀페이지 초기화면
 router.get('/:tname', isMgr, async (req, res, next) => {
     const tname = req.params.tname;
+    const conn = await pool.getConnection(async conn => conn);
     try {
         const [alarms] = await conn.query(
             `SELECT rq.rqid, c.id
