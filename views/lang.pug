@@ -21,7 +21,7 @@ block content
   form.create(action='/admin/lang', method='post')
       .input-group
         label(for='lang_name') 언어 이름
-        input#id(type='lang_name' name='lang_name' required autofocus)
+        input#lang_name(maxlength=20 name='lang_name' required autofocus)
       button.create.btn(type='submit') 등록
       if createError
         .error-message= createError

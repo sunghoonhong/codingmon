@@ -7,14 +7,14 @@ block content
       form#profile-form(action='/'+target.type+'/profile/update' method='post')
         .input-group
           label(for='id') ID
-          input#id(name='id' value=target.id required readonly)
+          input#id(name='id' maxlength=20 value=target.id required readonly)
         if user.type=='admin' || target.id==user.id
           .input-group
             label(for='pw') 비밀번호
             input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
-          input#name(name='name' value=target.name required readonly)
+          input#name(name='name' maxlength=20 value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
           input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
@@ -32,14 +32,14 @@ block content
       form#profile-form(action='/'+target.type+'/profile/update' method='post')
         .input-group
           label(for='id') ID
-          input#id(name='id' value=target.id required readonly)
+          input#id(name='id' maxlength=20 value=target.id required readonly)
         if user.type=='admin' || target.id==user.id
           .input-group
             label(for='pw') 비밀번호
             input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
-          input#name(name='name' value=target.name required readonly)
+          input#name(name='name' maxlength=20 value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
           input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
@@ -48,7 +48,7 @@ block content
           input#age(type='number' min=0 name='age' value=target.age required readonly)
         .input-group
           label(for='major') 전공
-          input#major(name='major' value=target.major required readonly)  
+          input#major(name='major' maxlength=20 value=target.major required readonly)  
         .input-group
           label(for='career') 경력
           input#career(type='number' min=0 name='career' value=target.career required readonly)

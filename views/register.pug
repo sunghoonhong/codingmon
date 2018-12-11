@@ -16,7 +16,7 @@ block content
     h4 기본정보
     .input-group
       label(for='rname') 의뢰 제목
-      input#rname(name='rname' required)
+      input#rname(name='rname' maxlength=100 required)
     .input-group
       label(for='reward') 의뢰 보상
       input#reward(type='number' min=0 name='reward' required)

@@ -19,13 +19,13 @@ block content
     form#join-form(action='/auth/join/freelancer' method='post')
       .input-group
         label(for='id') ID
-        input#id(name='id' required autofocus)
+        input#id(name='id' maxlength=20 required autofocus)
       .input-group
         label(for='pw') 비밀번호
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#name(name='name' required)
+        input#name(name='name' maxlength=20 required)
       .input-group
         label(for='phone_num') 휴대폰 번호 (000-0000-0000)
         input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
@@ -34,7 +34,7 @@ block content
         input#age(type='number' min=0 name='age' required)
       .input-group
         label(for='major') 전공
-        input#major(name='major' required)  
+        input#major(name='major' maxlength=20 required)  
       .input-group
         label(for='career') 경력
         input#career(type='number' min=0 name='career' required)
@@ -52,13 +52,13 @@ block content
     form#join-form(action='/auth/join/client' method='post')
       .input-group
         label(for='id') ID
-        input#id(name='id' required autofocus)
+        input#id(name='id' maxlength=20 required autofocus)
       .input-group
         label(for='pw') 비밀번호
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#name(name='name' required)
+        input#name(name='name' maxlength=20 required)
       .input-group
         label(for='phone_num') 휴대폰 번호 (000-0000-0000)
         input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
