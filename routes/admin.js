@@ -220,11 +220,19 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
             'SELECT fid FROM participates WHERE tname=?',
             tname
         );
+        const [knows] = await conn.query(
+            `SELECT * FROM team t, knows k
+            WHERE t.job_seeker_id = k.job_seeker_id
+            AND t.tname=?`, tname
+        );
+
         conn.release();
         res.render('team_profile', {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
             team: team,
+            tname: team.tname,
+            knows: knows,
             members: members,
             teamError: req.flash('teamError')
         });
