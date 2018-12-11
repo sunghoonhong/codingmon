@@ -156,13 +156,15 @@
 	
 	declare freelevel int;
 	declare teamlevel int;
+	declare sumpeople int;
 	
 	select MIN(career) into mincareer from freelancer f, participates p 
 	where f.id = p.fid and p.tname = new.tname;
 	
+	select count(*) into sumpeople from participates p where p.tname = new.tname;
 	update team
 	set
-	people_num = people_num + 1,
+	people_num = sumpeople,
 	career = mincareer
 	where team.tname = new.tname;
 	
@@ -242,13 +244,16 @@
 	declare peoplenum int;
 	declare freeid varchar(20);
 	declare beforefreeid varchar(20);
+	declare sumpeople int;
 	
 	select MIN(career) into mincareer from freelancer f, participates p 
 	where f.id = p.fid and p.tname = old.tname;
+
+	select count(*) into sumpeople from participates p where p.tname = old.tname;
 	
 	update team
 	set
-	people_num = people_num -1,
+	people_num = sumpeople,
 	career = mincareer
 	where team.tname = old.tname;
 	
