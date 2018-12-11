@@ -21,7 +21,7 @@ block content
     for member in members
       tr
         td
-          a(href=`/profile/${member.fid}`)
+          a(href=`/profile/${member.fid}`)= member.fid
         td
           if member.fid == team.mgr_id
             |팀장
