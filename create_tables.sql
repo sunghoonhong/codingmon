@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS client (
 
 CREATE TABLE IF NOT EXISTS request (
     rqid INT NOT NULL AUTO_INCREMENT,
-    cid VARCHAR(20) NOT NULL,
+    cid VARCHAR(20),
     rname VARCHAR(100) NOT NULL,
     reward INT NOT NULL,
     start_date DATETIME NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS request (
     min_career INT NOT NULL,
     FOREIGN KEY (cid)
         REFERENCES client (id)
-        ON UPDATE NO ACTION ON DELETE NO ACTION,/* changed1210 */
+        ON UPDATE CASCADE ON DELETE SET NULL,
     PRIMARY KEY (rqid)
 );
 

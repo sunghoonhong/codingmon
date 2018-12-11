@@ -1,4 +1,4 @@
-    /* before_job_seeker_delete */
+   /* before_job_seeker_delete */
  DELIMITER $$
  create trigger before_job_seeker_delete
  BEFORE DELETE ON job_seeker
@@ -10,7 +10,7 @@
  DELIMITER ;
  
        /* after_client_delete */
- DELIMITER $$
+ /*DELIMITER $$
  create trigger after_client_delete
  AFTER DELETE ON client
  FOR EACH ROW
@@ -18,7 +18,7 @@
 	DELETE FROM request where request.cid = old.id;
  
  END $$
- DELIMITER ;
+ DELIMITER ;*/
  
       /* before_request_delete  */
  DELIMITER $$
@@ -143,13 +143,24 @@
 
 
 /*  TEAM TEAM TEAM TEAM TEAM TEAM TEAM TEAM TEAM TEAM TEAM TEAM */
-/* 팀원 추가시 해당 팀의 career , people_num update */
+/* 팀원 추가시 해당 팀의 career , people_num, knows update */
 DELIMITER $$
 create trigger after_participates_insert
 after insert on participates
 FOR EACH ROW
 BEGIN
 	declare mincareer int;
+
+	declare teamjsi int;
+	declare freejsi int;
+	declare pnum int;
+
+	declare checknum int;
+	declare beforewhat VARCHAR(20);
+	declare what VARCHAR(20);
+	
+	declare freelevel int;
+	declare teamlevel int;
 	
 	select MIN(career) into mincareer from freelancer f, participates p 
 	where f.id = p.fid and p.tname = new.tname;
@@ -160,18 +171,82 @@ BEGIN
 	career = mincareer
 	where team.tname = new.tname;
 	
+	
+	select t.job_seeker_id into teamjsi from team t
+	where t.tname = new.tname;
+	
+	select f.job_seeker_id into freejsi from freelancer f
+	where f.id = new.fid;
+	
+	select t.people_num into pnum from team t
+	where t.tname = new. tname;
+	
+	if pnum = 1 then
+		set checknum =1;
+		loop_initeam:LOOP	
+		
+		
+			select * into what from (select * from program_lang order by lang_name desc limit checknum) as temp order by lang_name asc limit 1;
+		
+			IF what = beforewhat then
+				leave loop_initeam;
+			END IF;
+		
+			insert into knows(job_seeker_id, lang_name, level) values (teamjsi, what , 0);
+			set beforewhat = what;
+			set checknum = (checknum + 1);
+		
+	
+		END LOOP;
+	END IF;
+	
+	set checknum =1;
+	set beforewhat = null;
+	loop_update:LOOP
+	
+		select * into what from (select * from program_lang order by lang_name desc limit checknum) as temp order by lang_name asc limit 1; 
+		
+		IF what = beforewhat then
+			leave loop_update;
+		END IF;
+		
+		select level into freelevel from knows where knows.job_seeker_id = freejsi and knows.lang_name = what;
+		select level into teamlevel from knows where knows.job_seeker_id = teamjsi and knows.lang_name = what;
+		
+		if freelevel > teamlevel then
+			update knows set level = freelevel where job_seeker_id = teamjsi and lang_name = what;
+		END IF;
+		set beforewhat = what;
+		set checknum = (checknum + 1);
+		
+	END LOOP;
+/*	(select * from job_seeker order by job_seeker_id desc limit 1)*/
+	
 END $$
 DELIMITER ;
 
 
-
-/* 팀원 삭제시 해당 팀의 career , people_num update */
+/* 팀원 삭제시 해당 팀의 career , people_num, knows  update */
 DELIMITER $$
 create trigger after_participates_delete
 after delete on participates
 FOR EACH ROW
 BEGIN
 	declare mincareer int;
+	
+	declare teamjsi int;
+	declare freejsi int;
+
+	declare checknum int;
+	declare beforewhat VARCHAR(20);
+	declare what VARCHAR(20);
+	
+	declare freelevel int;
+	declare teamlevel int;
+		
+	declare peoplenum int;
+	declare freeid varchar(20);
+	declare beforefreeid varchar(20);
 	
 	select MIN(career) into mincareer from freelancer f, participates p 
 	where f.id = p.fid and p.tname = old.tname;
@@ -181,6 +256,62 @@ BEGIN
 	people_num = people_num -1,
 	career = mincareer
 	where team.tname = old.tname;
+	
+	select t.job_seeker_id into teamjsi from team t
+	where t.tname = old.tname;
+	
+	
+	set checknum =1;
+	loop_initeam:LOOP	
+		
+		select * into what from (select * from program_lang order by lang_name desc limit checknum) as temp order by lang_name asc limit 1;
+		
+		IF what = beforewhat then
+			leave loop_initeam;
+		END IF;
+		
+		update knows set level = 0 where job_seeker_id = teamjsi and lang_name = what;
+		set beforewhat = what;
+		set checknum = (checknum + 1);	
+	
+	END LOOP;
+	
+	set peoplenum = 1;
+	loop_allpeople:LOOP
+		select * into freeid from (select fid from participates where tname = old.tname order by fid desc limit peoplenum) as temp2 order by fid asc limit 1;
+		
+		IF freeid = beforefreeid THEN
+			leave loop_allpeople;
+		END IF;
+		
+		select f.job_seeker_id into freejsi from freelancer f where f.id = freeid;
+		
+		set checknum =1;
+		set beforewhat = null;
+		loop_update:LOOP
+	
+			select * into what from (select * from program_lang order by lang_name desc limit checknum) as temp order by lang_name asc limit 1; 
+		
+			IF what = beforewhat then
+				leave loop_update;
+			END IF;
+		
+			select level into freelevel from knows where knows.job_seeker_id = freejsi and knows.lang_name = what;
+			select level into teamlevel from knows where knows.job_seeker_id = teamjsi and knows.lang_name = what;
+		
+			if freelevel > teamlevel then
+				update knows set level = freelevel where job_seeker_id = teamjsi and lang_name = what;
+			END IF;
+			set beforewhat = what;
+			set checknum = (checknum + 1);
+		
+		END LOOP;
+		
+		set beforefreeid = freeid;
+		set peoplenum = (peoplenum +1);
+	END LOOP;
+
+	
 	
 END $$
 DELIMITER ;
