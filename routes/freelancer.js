@@ -164,7 +164,7 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
 
         // 잡시커도 삭제
         await conn.query(
-            `DELETE FROM job_seeker_id WHERE job_seeker_id=?`,
+            `DELETE FROM job_seeker WHERE job_seeker_id=?`,
             job_seeker_id
         );
 
