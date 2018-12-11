@@ -31,14 +31,16 @@ block content
       tr
         th 팀이름
         th 팀경력
-        th 팀평점
+        th 팀인원
+        th 선택
+
     tbody
       for team in teams
         tr
-          td= team.tname
+          td
             a(href=`/team/profile/${team.tname}`)= team.tname
           td= team.career
-          td= team.rating
+          td= team.people_num
           td
             form(action=`/client/request/${rqid}/apply` method='post')
               input(type='hidden' name='job_seeker_type' value='team')
