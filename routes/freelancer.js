@@ -65,7 +65,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
                 });
             }
             else
-                return res.redirect('/client/profile');
+                return res.redirect('/freelancer/profile');
         }
     }
     catch (err) {
