@@ -75,11 +75,13 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
             return res.redirect(`/profile/${req.body.targetId}`);
         }
-
+        
+        // 의뢰자 삭제
         await conn.query(
             'DELETE FROM client WHERE id=?',
             req.body.targetId
         );
+        
         conn.release();
         res.redirect('/');
     }
