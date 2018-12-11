@@ -171,11 +171,23 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
             else
                 return res.redirect(`/team/${req.body.tname}`);
         }
-        // 삭제
+        const [[team]] = await conn.query(
+            `SELETE job_seeker_id FROM team WHERE tname=?`,
+            req.body.tname
+        );
+        const job_seeker_id = team.job_seeker_id;
+        // 팀 삭제
         await conn.query(
             'DELETE FROM team WHERE tname=?',
             req.body.tname
         );
+
+        // 잡시커도 삭제
+        await conn.query(
+            `DELETE FROM job_seeker_id WHERE job_seeker_id=?`,
+            job_seeker_id
+        );
+        
         conn.release();
         if(req.user.type=='admin')
             res.redirect('/admin/team');

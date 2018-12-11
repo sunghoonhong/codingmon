@@ -135,6 +135,11 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
             return res.redirect(`/profile/${req.body.targetId}`);
         }
+        const [[target]] = await conn.query(
+            `SELECT job_seeker_id FROM freelancer WHERE id=?`,
+            req.body.targetId
+        );
+        const job_seeker_id = target.job_seeker.id;
 
         const [externals] = await conn.query(
             `SELECT efile, fid FROM owns_external WHERE fid=?`,
@@ -156,6 +161,13 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             'DELETE FROM freelancer WHERE id=?',
             req.body.targetId
         );
+
+        // 잡시커도 삭제
+        await conn.query(
+            `DELETE FROM job_seeker_id WHERE job_seeker_id=?`,
+            job_seeker_id
+        );
+
         conn.release();
         return res.redirect('/');
     }
