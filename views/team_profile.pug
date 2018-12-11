@@ -56,7 +56,7 @@ block content
     h4 팀원 초대
     form(action='/team/invite' method='post')
       input(type='hidden' name='tname' value=team.tname)
-      input(name='inviteId' value required)
+      input(name='inviteId' maxlength=20 value required)
       button.btn(type='submit') 초대
       
   h3 팀 삭제
