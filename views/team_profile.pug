@@ -13,16 +13,28 @@ block content
       a.btn(href='/team/working/'+tname) 진행 중인 의뢰
       a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
 
-  h3
-    label(for='tname') 팀 이름
-    div#tname= team.tname
-
-    label(for='mgr_id') 팀장 ID
-    div#mgr_id= team.mgr_id
-
-    label(for='career') 경력
-    div#career= team.career
-
+  h3 기본 정보
+  table 
+    tr
+      th 팀 이름
+      th 팀장 ID
+      th 팀 인원
+      th 최소 경력
+    tr
+      td= team.tname
+      td= team.mgr_id
+      td= team.people_num
+      td= team.career
+  h3 팀 프로그래밍 언어 능숙도
+  table
+    tr
+      th 언어
+      th 능숙도
+    for know in knows
+      tr
+        td= know.lang_name
+        td= know.level
+        
   h3 팀 멤버
   table
     tr
