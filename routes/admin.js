@@ -119,7 +119,7 @@ router.post('/lang', isAdmin, async (req, res, next) => {
                 `SELECT * FROM job_seeker`
             );
             const [requests] = await conn.query(
-                `SELECT rqid FROM requests`
+                `SELECT rqid FROM request`
             );
 
             // 모든 프리랜서에 대해 프로그래밍 언어 능숙도에 0으로 추가
@@ -142,7 +142,7 @@ router.post('/lang', isAdmin, async (req, res, next) => {
         }
         catch (err) {
             conn.release();
-            console.error('Query Error');
+            console.error(err);
             return res.redirect('/admin/lang');
         }
     }
