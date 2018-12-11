@@ -253,7 +253,6 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
             AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)`,
             [req.body.rqid, req.user.id, req.user.id]
         );
-        console.log(pass);
         if(!pass) {
             conn.release();
             req.flash('applyError', '최소 조건을 충족시키지 못합니다');
