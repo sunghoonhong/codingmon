@@ -23,7 +23,8 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
         );
         const [knows] = await conn.query(
             `SELECT * FROM team t, knows k
-            WHERE t.job_seeker_id = k.job_seeker_id`
+            WHERE t.job_seeker_id = k.job_seeker_id
+            AND t.tname=?`, tname
         );
 
         conn.release();
