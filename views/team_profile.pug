@@ -20,8 +20,9 @@ block content
       th 추방
     for member in members
       tr
-        th= member.fid
-        th
+        td
+          a(href=`/profile/${member.fid}`)
+        td
           if member.fid == team.mgr_id
             |팀장
             -continue
@@ -29,8 +30,13 @@ block content
             input(type='hidden' name='tname' value=team.tname)
             input(type='hidden' name='banId' value=member.fid)
             button.btn(type='submit') X
-
-  button.btn 멤버 추가(예정...)
+  if user.type=='admin' || user.id==team.mgr_id
+    h4 팀원 초대
+    form(action='/team/invite' method='post')
+      input(type='hidden' name='tname' value=team.tname)
+      input(name='inviteId' value required)
+      button.btn(type='submit') 초대
+      
   h3 팀 삭제
   form(action='/team/delete' method='post')
     input(type='hidden' name='tname' value=team.tname)
