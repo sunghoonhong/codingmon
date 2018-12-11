@@ -99,6 +99,7 @@ router.post('/lang', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
         try {
+            // 이미 있는 언어 예외처리
             const [exLang] = await conn.query(
                 'SELECT * FROM program_lang WHERE lang_name=?',
                 req.body.lang_name
@@ -108,10 +109,34 @@ router.post('/lang', isAdmin, async (req, res, next) => {
                 conn.release();
                 return res.redirect('/admin/lang');
             }
+            // 프로그래밍 언어 목록에 추가
             await conn.query(
                 'INSERT INTO program_lang(lang_name) VALUES(?)',
                 req.body.lang_name
             );
+            
+            const [job_seekers] = await conn.query(
+                `SELECT * FROM job_seeker`
+            );
+            const [requests] = await conn.query(
+                `SELECT rqid FROM requests`
+            );
+
+            // 모든 프리랜서에 대해 프로그래밍 언어 능숙도에 0으로 추가
+            for(var i=0; i<job_seekers.length; i++) {
+                await conn.query(
+                    `INSERT INTO knows VALUES(?,?,?)`,
+                    [job_seekers[i].job_seeker_id, req.body.lang_name, 0]
+                )
+            }
+            
+            // 모든 의뢰에 대해 요구 언어 능숙도에 0으로 추가
+            for(var i=0; i<requests.length; i++) {
+                await conn.query(
+                    `INSERT INTO requires VALUES(?,?,?)`,
+                    [requests[i].rqid, req.body.lang_name, 0]
+                )
+            }
             conn.release();
             return res.redirect('/admin/lang');
         }
