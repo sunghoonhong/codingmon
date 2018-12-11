@@ -154,11 +154,11 @@ CREATE TABLE IF NOT EXISTS report (
     status VARCHAR(20) NOT NULL DEFAULT 'waiting' ,
     rfile VARCHAR(100) NOT NULL,
     rqid INT NOT NULL,
-    job_seeker_id INT NOT NULL,
+    job_seeker_id INT,
     PRIMARY KEY (rid),
     FOREIGN KEY (job_seeker_id)
         REFERENCES job_seeker (job_seeker_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+        ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (rqid)
         REFERENCES request (rqid)
         ON UPDATE CASCADE ON DELETE CASCADE
