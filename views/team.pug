@@ -7,7 +7,7 @@ block content
     a.btn(href='/team/possible/'+tname) 신청 가능한 의뢰
     a.btn(href='/team/waiting/'+tname) 신청한 의뢰
     a.btn(href='/team/working/'+tname) 진행 중인 의뢰
-    a.btn(href='/team/accepted/'+tname)) 요청수락된 의뢰
+    a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
   h2= `${tname} 팀 페이지`
   for alarm in alarms
     p= `의뢰자 ${alarm.id}님이 ${alarm.rqid}번 의뢰에 대해 완료를 수락하였습니다.`
