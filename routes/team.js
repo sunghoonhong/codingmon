@@ -76,7 +76,7 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
         // 이미 팀원인 경우 예외처리
         const [[exMem]] = await conn.query(
             `SELECT * FROM participates WHERE tname=? AND fid=?`,
-            [tname, inveiteId]
+            [tname, inviteId]
         );
         if(exMem) {
             req.flash('teamError', '이미 있는 팀원입니다');
