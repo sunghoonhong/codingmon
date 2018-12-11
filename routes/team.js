@@ -236,6 +236,42 @@ router.post('/:tname/apply', isMgr, async (req, res, next) => {
     }
 });
 
+// 신청가능한 의뢰목록 조회
+router.get('/possible/:tname', isMgr, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT R.rqid, R.rname, C.id as cid, R.start_date, R.end_date, 
+            R.min_people, R.max_people, R.reward, R.min_career
+            FROM request R, team T, client C
+            WHERE R.dev_start IS NULL AND T.career >= R.min_career AND C.id = R.cid
+            AND R.min_people <= T.people_num AND R.max_people >= T.people_num
+            AND T.id = ? AND R.start_date <= now() AND now() <= R.end_date
+            AND NOT EXISTS
+            (SELECT * FROM knows K, requires req, program_lang pl
+            WHERE T.job_seeker_id = K.job_seeker_id
+            AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
+            AND req.rqid = R.rqid AND K.level < req.level AND T.id = ?)`,
+            [req.params.tname, req.params.tname]
+        );
+        conn.release();
+        res.render('team_request', {
+            title: '신청 가능한 의뢰 목록',
+            user: req.user,
+            tname: req.params.tname,
+            requests: requests,
+            orderType: req.query.orderType,
+            applyError: req.flash('applyError')
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
 // 신청한 의뢰목록 조회
 router.get('/waiting/:tname', isMgr, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
