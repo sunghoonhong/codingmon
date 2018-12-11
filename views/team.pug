@@ -12,6 +12,6 @@ block content
   for alarm in alarms
     p= `의뢰자 ${alarm.id}님이 ${alarm.rqid}번 의뢰에 대해 완료를 수락하였습니다.`
   if (alarms[0])
-    a.btn(href=`/team/${tname}/accepted`) 평점 매기러 바로가기
+    a.btn(href=`/team/accepted/${tname}`) 평점 매기러 바로가기
   if teamError
     .error-message= teamError
