@@ -219,7 +219,7 @@ router.post('/:tname/apply', isMgr, async (req, res, next) => {
         if(!pass) {
             conn.release();
             req.flash('applyError', '최소 조건을 충족시키지 못합니다');
-            return res.redirect(`/team/${req.params.tname}/request`);
+            return res.redirect(`/team/request/${req.params.tname}`);
         }
         await conn.query(
             `INSERT INTO applys(rqid, job_seeker_id) VALUES(?, ?)`,

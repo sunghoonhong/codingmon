@@ -8,7 +8,7 @@ block content
       'start_date': '의뢰시작날짜'
     };
   .align
-    form(action=`/team/${tname}/request` method='get')
+    form(action=`/team/request/${tname}` method='get')
       select(name='orderType')
         each label, key in index
           if key == orderType
