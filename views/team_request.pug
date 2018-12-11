@@ -7,14 +7,15 @@ block content
       'reward': '의뢰금액',
       'start_date': '의뢰시작날짜'
     };
-  form(action=`/team/${tname}/request` method='get')
-    select(name='orderType')
-      each label, key in index
-        if key == orderType
-          option(value=key selected)= label
-        else
-          option(value=key)= label
-    button.btn(type='submit') 정렬
+  .align
+    form(action=`/team/${tname}/request` method='get')
+      select(name='orderType')
+        each label, key in index
+          if key == orderType
+            option(value=key selected)= label
+          else
+            option(value=key)= label
+      button.btn(type='submit') 정렬
   table
     thead
       tr
