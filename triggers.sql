@@ -1,6 +1,21 @@
  /* 디비디비딥 팀 데이터베이스 프로젝트 triggers.sql */
  /* 프로젝트에 사용된 트리거들을 저장해놓은 파일입니다. */
 
+ /* 프리랜서를 지우기 전, 해당 프리랜서를 참조하는 participates(팀의 팀원)를 지우는 트리거  */
+ /* cascade로 participates가 지워질 경우, 
+    팀의 경력, 인원 수, 언어별 능숙도를 업데이트하는 트리거가 작동되지 않기 때문에 
+    프리랜서를 지우기 전에 트리거로 participates를 지워줌 */
+ /* before_freelancer_delete */
+ DELIMITER $$
+ create trigger before_freelancer_delete
+ BEFORE DELETE ON freelancer
+ FOR EACH ROW
+ BEGIN
+	DELETE FROM participates where fid = old.id;
+ 
+ END $$
+ DELIMITER ;
+ 
  /* 의뢰 지우기 전, 해당 의뢰를 참조하는 report(결과보고서)를 지우는 트리거  */
  /* cascade로 결과보고서가 지워질 경우, 
    평점 업데이트하는 트리거가 작동되지 않기 때문에 의뢰 지우기 전에 트리거로 결과보고서를 지워줌 */
