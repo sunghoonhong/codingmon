@@ -59,7 +59,7 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
             if (req.user.type=='admin')
                 return res.redirect(`/admin/team`);
             else
-                return res.redirect(`/team/${tname}`);
+                return res.redirect(`/team/profile/${tname}`);
         }
         // 해당 ID의 프리랜서가 존재하지않으면 예외처리
         const [[exFree]] = await conn.query(
@@ -71,7 +71,7 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
             if (req.user.type=='admin') {
                 return res.redirect('/admin/team');
             }
-            return res.redirect(`/team/${tname}`);
+            return res.redirect(`/team/profile/${tname}`);
         }
         // 이미 팀원인 경우 예외처리
         const [[exMem]] = await conn.query(
@@ -83,7 +83,7 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
             if (req.user.type == 'admin') {
                 return res.redirect('/admin/team');
             }
-            return res.redirect(`/team/${tname}`);
+            return res.redirect(`/team/profile/${tname}`);
         }
         // 팀원에 추가
         await conn.query(
@@ -93,7 +93,7 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
         if(req.user.type=='admin') {
             return res.redirect('/admin/team');
         }
-        res.redirect(`/team/${tname}`);
+        res.redirect(`/team/profile/${tname}`);
 
     }
     catch (err) {
@@ -124,7 +124,7 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
             if (req.user.type=='admin')
                 return res.redirect(`/admin/team`);
             else
-                return res.redirect(`/team/${tname}`);
+                return res.redirect(`/team/profile/${tname}`);
         }
         await conn.query(
             'DELETE FROM participates WHERE tname=? AND fid=?',
@@ -134,7 +134,7 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
         if(req.user.type=='admin')
             res.redirect('/admin/team');
         else
-            res.redirect(`/team/${tname}`);
+            res.redirect(`/team/profile/${tname}`);
     }
     catch (err) {
         conn.release();
