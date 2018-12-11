@@ -62,13 +62,25 @@ router.post('/invite', isLoggedIn, async(req, res, next) => {
                 return res.redirect(`/team/${tname}`);
         }
         // 해당 ID의 프리랜서가 존재하지않으면 예외처리
-        const [[exMem]] = await conn.query(
+        const [[exFree]] = await conn.query(
             `SELECT * FROM freelancer WHERE id=?`,
             inviteId
         );
-        if(!exMem) {
+        if(!exFree) {
             req.flash('teamError', 'ID가 잘못됐습니다.');
             if (req.user.type=='admin') {
+                return res.redirect('/admin/team');
+            }
+            return res.redirect(`/team/${tname}`);
+        }
+        // 이미 팀원인 경우 예외처리
+        const [[exMem]] = await conn.query(
+            `SELECT * FROM participates WHERE tname=? AND fid=?`,
+            [tname, inveiteId]
+        );
+        if(exMem) {
+            req.flash('teamError', '이미 있는 팀원입니다');
+            if (req.user.type == 'admin') {
                 return res.redirect('/admin/team');
             }
             return res.redirect(`/team/${tname}`);
