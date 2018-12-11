@@ -561,7 +561,7 @@ router.get('/:tname', isMgr, async (req, res, next) => {
         const [alarms] = await conn.query(
             `SELECT rq.rqid, c.id
             FROM team t, request rq, report rp, accepted ac, client c
-            WHERE t.id = ? AND t.job_seeker_id = rp.job_seeker_id AND rp.rid = ac.arid
+            WHERE t.tname = ? AND t.job_seeker_id = rp.job_seeker_id AND rp.rid = ac.arid
             AND rp.rqid = rq.rqid AND rq.cid = c.id AND ac.c_rating is NULL`,
             tname
         );
