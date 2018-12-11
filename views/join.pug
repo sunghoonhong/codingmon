@@ -27,8 +27,8 @@ block content
         label(for='name') 이름
         input#name(name='name' required)
       .input-group
-        label(for='phone_num') 휴대폰 번호
-        input#phone_num(name='phone_num' required)
+        label(for='phone_num') 휴대폰 번호 (000-0000-0000)
+        input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
       .input-group
         label(for='age') 나이
         input#age(type='number' min=0 name='age' required)
@@ -60,8 +60,8 @@ block content
         label(for='name') 이름
         input#name(name='name' required)
       .input-group
-        label(for='phone_num') 휴대폰 번호
-        input#phone_num(name='phone_num' required)
+        label(for='phone_num') 휴대폰 번호 (000-0000-0000)
+        input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
       button#join.btn(type='submit') 가입
       if joinError
         .error-message= joinError

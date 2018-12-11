@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS freelancer (
     id VARCHAR(20) NOT NULL,
     password VARCHAR(100) NOT NULL,
     name VARCHAR(20) NOT NULL,
-    phone_num VARCHAR(11) NOT NULL,
+    phone_num CHAR(13) NOT NULL,
     rating float(7,2),
     age INT NOT NULL,
     major VARCHAR(20) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS client (
     id VARCHAR(20) NOT NULL,
     password VARCHAR(100) NOT NULL,
     name VARCHAR(20) NOT NULL,
-    phone_num VARCHAR(11) NOT NULL,
+    phone_num CHAR(13) NOT NULL,
     rating float(7,2),
     PRIMARY KEY (id)
 );

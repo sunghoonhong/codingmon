@@ -17,7 +17,7 @@ block content
           input#name(name='name' value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
-          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+          input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
         .input-group
           label(for='rating') 평점
           input#rating(name='rating' value=target.rating required readonly)
@@ -42,7 +42,7 @@ block content
           input#name(name='name' value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
-          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+          input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
         .input-group
           label(for='age') 나이
           input#age(type='number' min=0 name='age' value=target.age required readonly)
