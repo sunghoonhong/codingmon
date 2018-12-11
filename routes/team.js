@@ -248,12 +248,12 @@ router.get('/possible/:tname', isMgr, async (req, res, next) => {
             FROM request R, team T, client C
             WHERE R.dev_start IS NULL AND T.career >= R.min_career AND C.id = R.cid
             AND R.min_people <= T.people_num AND R.max_people >= T.people_num
-            AND T.id = ? AND R.start_date <= now() AND now() <= R.end_date
+            AND T.tname = ? AND R.start_date <= now() AND now() <= R.end_date
             AND NOT EXISTS
             (SELECT * FROM knows K, requires req, program_lang pl
             WHERE T.job_seeker_id = K.job_seeker_id
             AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
-            AND req.rqid = R.rqid AND K.level < req.level AND T.id = ?)`,
+            AND req.rqid = R.rqid AND K.level < req.level AND T.tname = ?)`,
             [req.params.tname, req.params.tname]
         );
         conn.release();
@@ -280,7 +280,7 @@ router.get('/waiting/:tname', isMgr, async (req, res, next) => {
         const [requests] = await conn.query(
             `SELECT R.rqid, R.rname, R.cid, R.start_date, R.reward, A.status
             FROM request R, client C, team T, applys A
-            WHERE R.cid = C.id AND T.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND T.id=?
+            WHERE R.cid = C.id AND T.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND T.tname=?
             ORDER BY A.status DESC`, req.params.tname
         );
         conn.release();
@@ -321,7 +321,7 @@ router.get('/working/:tname', isMgr, async (req, res, next) => {
         const [declineds] = await conn.query(
             `SELECT R.rqid, R.rname, C.id as cid, R.dev_start, R.reward
             FROM request R,client C, team T, applys A
-            WHERE R.cid = C.id AND AND T.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
+            WHERE R.cid = C.id AND T.job_seeker_id = A.job_seeker_id AND A.rqid = R.rqid AND A.status = 'accepted' 
             AND (SELECT rep.status FROM report rep WHERE R.rqid=rep.rqid ORDER BY rep.rid DESC LIMIT 1)='declined'
             AND R.dev_end IS NULL AND T.tname=?`,
             req.params.tname
@@ -407,7 +407,7 @@ router.get('/:tname/request/:rqid/declined', isMgr, async (req, res, next) => {
 });
 
 // 수락된 의뢰 목록 조회
-router.get('/:tname/accepted', isMgr, async (req, res, next) => {
+router.get('/accepted/:tname', isMgr, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [acceptances] = await conn.query(
