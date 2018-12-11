@@ -401,13 +401,13 @@ router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
         );
         // 의뢰를 맡은 대상을 선택
         const [[freelancer]] = await conn.query(
-            `SELECT f.id as id
+            `SELECT f.id
             FROM freelancer f, report rep
             WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = f.job_seeker_id`,
             req.params.rid
         );
         const [[team]] = await conn.query(
-            `SELECT t.tname as id
+            `SELECT t.tname
             FROM team t, report rep
             WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = t.job_seeker_id`,
             req.params.rid
