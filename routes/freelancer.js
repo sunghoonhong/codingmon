@@ -139,7 +139,7 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             `SELECT job_seeker_id FROM freelancer WHERE id=?`,
             req.body.targetId
         );
-        const job_seeker_id = target.job_seeker.id;
+        const job_seeker_id = target.job_seeker_id;
 
         const [externals] = await conn.query(
             `SELECT efile, fid FROM owns_external WHERE fid=?`,
