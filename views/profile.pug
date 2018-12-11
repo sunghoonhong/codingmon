@@ -79,7 +79,8 @@ block content
             th 결과 보고서
           for internal in internals
             tr
-              td= internal.rqid
+              td
+                a(href=`/request/${internal.rqid}`)= internal.rqid
               td= internal.rname
               td= format(internal.dev_start)
               td= format(internal.dev_end)

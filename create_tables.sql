@@ -205,4 +205,3 @@ CREATE TABLE IF NOT EXISTS owns_internal (
         REFERENCES accepted (arid)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-

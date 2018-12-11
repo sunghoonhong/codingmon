@@ -75,11 +75,13 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
             req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
             return res.redirect(`/profile/${req.body.targetId}`);
         }
-
+        
+        // 의뢰자 삭제
         await conn.query(
             'DELETE FROM client WHERE id=?',
             req.body.targetId
         );
+        
         conn.release();
         res.redirect('/');
     }
@@ -390,27 +392,60 @@ router.get('/report/:rid/accept', isLoggedIn, (req, res, next) => {
 router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        // 개발종료날짜
         await conn.query(
             `UPDATE report rep, request req
             SET rep.status = 'accepted', req.dev_end = now()
             WHERE rep.rid = ? and rep.rqid = req.rqid`,
             req.params.rid
         );
-        const [users] = await conn.query(
-            `SELECT f.id as fid
-            FROM freelancer f, report rep, job_seeker j
-            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = j.job_seeker_id 
-            AND j.job_seeker_id = f.job_seeker_id`,
+        // 의뢰를 맡은 대상을 선택
+        const [[freelancer]] = await conn.query(
+            `SELECT f.id as id
+            FROM freelancer f, report rep
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = f.job_seeker_id`,
             req.params.rid
         );
-        await conn.query(
-            `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
-            [req.params.rid, req.body.rating]
+        const [[team]] = await conn.query(
+            `SELECT t.tname as id
+            FROM team t, report rep
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = t.job_seeker_id`,
+            req.params.rid
         );
-        await conn.query(
-            `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
-            [users[0].fid, req.params.rid]
-        );
+        
+        // 프리랜서일 경우
+        if(freelancer) {
+            await conn.query(
+                `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+                [req.params.rid, req.body.rating]
+            );
+            await conn.query(
+                `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+                [freelancer.id, req.params.rid]
+            );
+        }
+        // 팀일 경우
+        else if(team) {
+            const [members] = await conn.query(
+                `SELECT * FROM participates WHERE tname=?`,
+                team.tname
+            );
+            await conn.query(
+                `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+                [req.params.rid, req.body.rating]
+            );
+            for(var i=0; i<members.length; ++i) {  
+                await conn.query(
+                    `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+                    [members[i].fid, req.params.rid]
+                );
+            }
+
+        }
+        // 예외 에러
+        else {
+            console.error('수락 과정에서 대상이 없습니다');
+        }
         conn.release();
         return res.redirect('/');
     }

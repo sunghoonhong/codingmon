@@ -37,6 +37,59 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
     }
 });
 
+// 팀장이 팀원 초대
+router.post('/invite', isLoggedIn, async(req, res, next) => {
+    const {
+        tname, inviteId
+    } = req.body;
+    const conn = await pool.getConnection(async conn => conn);
+    try{
+         // 진행중인 의뢰가 있으면 변경불가
+         const [[exWork]] = await conn.query(
+            `SELECT * FROM team t, request rq, applys ap 
+            WHERE rq.rqid=ap.rqid AND ap.job_seeker_id=t.job_seeker_id
+            AND ap.status='accepted' AND rq.dev_start IS NOT NULL AND rq.dev_end IS NULL
+            AND tname=?`,
+            tname
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('teamError', '진행 중인 의뢰가 있습니다');
+            if (req.user.type=='admin')
+                return res.redirect(`/admin/team`);
+            else
+                return res.redirect(`/team/${tname}`);
+        }
+        // 해당 ID의 프리랜서가 존재하지않으면 예외처리
+        const [[exMem]] = await conn.query(
+            `SELECT * FROM freelancer WHERE id=?`,
+            inviteId
+        );
+        if(!exMem) {
+            req.flash('teamError', 'ID가 잘못됐습니다.');
+            if (req.user.type=='admin') {
+                return res.redirect('/admin/team');
+            }
+            return res.redirect(`/team/${tname}`);
+        }
+        // 팀원에 추가
+        await conn.query(
+            `INSERT INTO participates VALUES(?, ?)`,
+            [inviteId, tname]
+        );
+        if(req.user.type=='admin') {
+            return res.redirect('/admin/team');
+        }
+        res.redirect(`/team/${tname}`);
+
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+})
+
 // 팀장이 팀원 추방
 router.post('/ban', isLoggedIn, async(req, res, next) => {
     const {
@@ -64,8 +117,6 @@ router.post('/ban', isLoggedIn, async(req, res, next) => {
             'DELETE FROM participates WHERE tname=? AND fid=?',
             [tname, banId]
         );
-        // 인원수, 경력, 능숙도 업데이트 필요
-        
         conn.release();
         if(req.user.type=='admin')
             res.redirect('/admin/team');
@@ -118,6 +169,7 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
     }
 });
 
+// 구인중인 의뢰 목록
 router.get('/request/:tname', isMgr, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
@@ -455,44 +507,8 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
             'INSERT INTO participates(fid, tname) VALUES(?, ?)',
             [memberId, tname]
         );
-
-        // 팀의 언어별 능숙도 계산
-        var [langs] = await conn.query('SELECT lang_name FROM program_lang');
-        const [mgr_knows] = await conn.query(
-            'SELECT lang_name, level FROM knows WHERE job_seeker_id=?',
-            req.user.job_seeker_id
-        );
-        const [mem_knows] = await conn.query(
-            'SELECT lang_name, level FROM knows WHERE job_seeker_id=?',
-            exMem.job_seeker_id
-        );
-        for(var i=0; i<langs.length; ++i) {
-            langs[i].level = 0;
-            for(var j=0; j<mgr_knows.length; ++j) {
-                if(mgr_knows[j].lang_name == langs[i].lang_name) {
-                    langs[i].level = mgr_knows[j].level;
-                    break;
-                }
-            }
-            for(var j=0; j<mem_knows.length; ++j) {
-                if(mem_knows[j].lang_name == langs[i].lang_name) {
-                    langs[i].level = Math.max(langs[i].level, mem_knows[j].level);
-                    break;
-                }
-            }
-        }
-        // 계산한 최대 언어 능숙도 등록
-        for(var i=0; i<langs.length; ++i) {
-            if(langs[i].level) {
-                await conn.query(
-                    'INSERT INTO knows(job_seeker_id, lang_name, level) \
-                    VALUES(?, ?, ?)',
-                    [jobSeeker.insertId, langs[i].lang_name, langs[i].level]
-                );
-            }
-        }
         conn.release();
-        res.redirect('/');
+        res.redirect(`/team/${tname}`);
     }
     catch (err) {
         conn.release();

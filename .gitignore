@@ -3,3 +3,4 @@ config
 .vscode
 public/external
 public/document
+backup.js

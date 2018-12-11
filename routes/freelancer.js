@@ -197,7 +197,7 @@ router.get('/:id/external/:file', (req, res, next) => {
 });
 
 // 구인 중인 의뢰목록 확인
-router.get('/request', async (req, res, next) => {
+router.get('/request', isLoggedIn, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -261,6 +261,42 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
         res.redirect('/');
     }
 });
+
+// 신청가능한 의뢰목록 조회
+router.get('/possible', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT R.rqid, R.rname, C.id as cid, R.start_date, R.end_date, 
+            R.min_people, R.max_people, R.reward, R.min_career
+            FROM request R, freelancer F, client C
+            WHERE R.dev_start IS NULL AND R.min_people <= 1 AND F.career >= R.min_career
+            AND F.id = ? AND R.start_date <= now() AND now() <= R.end_date
+            AND C.id = R.cid
+            AND NOT EXISTS
+            (SELECT * FROM knows K, requires req, program_lang pl
+            WHERE F.job_seeker_id = K.job_seeker_id
+            AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
+            AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)`,
+            [req.user.id, req.user.id]
+        );
+        conn.release();
+        res.render('freelancer_request', {
+            title: '신청 가능한 의뢰 목록',
+            user: req.user,
+            requests: requests,
+            orderType: req.query.orderType,
+            applyError: req.flash('applyError')
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
 
 // 신청한 의뢰목록 조회
 router.get('/waiting', isLoggedIn, async (req, res, next) => {
