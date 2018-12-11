@@ -26,6 +26,7 @@ router.get('/profile/:tname', isLoggedIn, async(req, res, next) => {
             title: '팀 정보',
             user: req.user,
             team: team,
+            tname: team.tname,
             members: members,
             teamError: req.flash('teamError')
         });
@@ -286,7 +287,8 @@ router.get('/waiting/:tname', isMgr, async (req, res, next) => {
         res.render('team_waiting', {
             title: '팀이 신청한 의뢰',
             user: req.user,
-            requests: requests
+            requests: requests,
+            tname: req.params.tname
         });
     }
     catch (err) {
@@ -393,6 +395,7 @@ router.get('/:tname/request/:rqid/declined', isMgr, async (req, res, next) => {
             title: '거절 메시지',
             user: req.user,
             messages: messages,
+            tname: req.params.tname,
             rqid:req.params.rqid,
         });
     }

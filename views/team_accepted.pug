@@ -1,6 +1,13 @@
 extends layout
 
 block content
+  .menu
+    a.btn(href='/team/profile/'+tname) 팀 정보
+    a.btn(href='/team/request/'+tname) 구인중인 의뢰
+    a.btn(href='/team/possible/'+tname) 신청 가능한 의뢰
+    a.btn(href='/team/waiting/'+tname) 신청한 의뢰
+    a.btn(href='/team/working/'+tname) 진행 중인 의뢰
+    a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
   h2 그는 아직도 기다리고 있다...
   table
     thead
