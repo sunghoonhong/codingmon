@@ -60,9 +60,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
         if(!langFlag) {
             req.flash('updateError', '적어도 하나의 언어는 하세요');
             if(req.user.type=='admin') {
-                return res.render('alert', {
-                    message: req.flash('updateError')
-                });
+                return res.redirect(`/profile/${req.body.id}`);
             }
             else
                 return res.redirect('/freelancer/profile');
