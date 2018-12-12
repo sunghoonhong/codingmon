@@ -208,6 +208,33 @@ router.get('/:id/external/:file', (req, res, next) => {
     });
 });
 
+// 전체 의뢰 목록
+router.get('/all_request', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [requests] = await conn.query(
+            `SELECT rq.rqid, rq.rname, c.id as cid, rq.start_date, rq.end_date, 
+            rq.dev_start, rq.dev_end, rq.reward
+            FROM request rq, client c
+            WHERE rq.cid = c.id
+            ORDER BY rq.${req.query.orderType};`    
+        );
+        conn.release();
+        res.render('freelancer_all_request', {
+            title: '전체 의뢰 목록',
+            user: req.user,
+            requests: requests,
+            orderType: req.query.orderType,
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
 // 구인 중인 의뢰목록 확인
 router.get('/request', isLoggedIn, async (req, res, next) => {
     if(!req.query.orderType) req.query.orderType = 'rqid';
