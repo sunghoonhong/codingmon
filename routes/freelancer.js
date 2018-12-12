@@ -291,7 +291,7 @@ router.post('/apply', isLoggedIn, async (req, res, next) => {
         return res.redirect('/');
     }
     catch (err) {
-        req.flash('applyError', '신청 중 오류 발생');
+        req.flash('applyError', '이미 신청한 의뢰입니다');
         conn.release();
         console.error(err);
         res.redirect('/');
