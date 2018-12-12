@@ -39,27 +39,30 @@ block content
   table
     tr
       th 멤버 ID
-      th 추방
+      if user.type=='admin' || user.id==team.mgr_id
+        th 추방
     for member in members
       tr
         td
           a(href=`/profile/${member.fid}`)= member.fid
-        td
-          if member.fid == team.mgr_id
-            |팀장
-            -continue
-          form(action='/team/ban' method='post')
-            input(type='hidden' name='tname' value=team.tname)
-            input(type='hidden' name='banId' value=member.fid)
-            button.btn(type='submit') X
+        if user.type=='admin' || user.id==team.mgr_id
+          td
+            if member.fid == team.mgr_id
+              |팀장
+              -continue
+            form(action='/team/ban' method='post')
+              input(type='hidden' name='tname' value=team.tname)
+              input(type='hidden' name='banId' value=member.fid)
+              button.btn(type='submit') X
+
   if user.type=='admin' || user.id==team.mgr_id
     h4 팀원 초대
     form(action='/team/invite' method='post')
       input(type='hidden' name='tname' value=team.tname)
       input(name='inviteId' maxlength=20 value required)
       button.btn(type='submit') 초대
-      
-  h3 팀 삭제
-  form(action='/team/delete' method='post')
-    input(type='hidden' name='tname' value=team.tname)
-    button.btn(type='submit') 삭제
+  
+    h3 팀 삭제
+    form(action='/team/delete' method='post')
+      input(type='hidden' name='tname' value=team.tname)
+      button.btn(type='submit') 삭제

@@ -169,7 +169,7 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
             if (req.user.type=='admin')
                 return res.redirect(`/admin/team`);
             else
-                return res.redirect(`/team/${req.body.tname}`);
+                return res.redirect(`/team/profile/${req.body.tname}`);
         }
         const [[team]] = await conn.query(
             `SELETE job_seeker_id FROM team WHERE tname=?`,
