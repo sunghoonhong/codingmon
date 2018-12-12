@@ -47,7 +47,7 @@ block content
     for waiting in waitings
       tr
         td
-          a(href=`/dev/${waiting.rqid}`)= waiting.rqid
+          a(href=`/request/${waiting.rqid}`)= waiting.rqid
         td= waiting.cid
         td= waiting.rname
         td= format(waiting.dev_start)
