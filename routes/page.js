@@ -172,10 +172,9 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         conn.release();
         next(err);
     }
-    var sql = 'UPDATE request  \
-                SET rname=?, reward=?, min_people=?, \
-                max_people=?, min_career=?, \
-                start_date=?, end_date=?';
+    var sql = `UPDATE request
+            SET rname=?, reward=?, min_people=?,
+            max_people=?, min_career=?, start_date=?, end_date=?`;
     var params = [
         rname, reward, min_people, max_people,
         min_career, start_date, end_date
@@ -194,9 +193,9 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         var keys = Object.keys(req.body);
         for(var i=11; i<keys.length; ++i) {
             await conn.query(
-                'INSERT INTO requires (rqid, lang_name, level) \
-                VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
-                [rqid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+                `UPDATE requires SET level=?
+                WHERE rqid=? AND lang_name=?`,
+                [req.body[keys[i]], rqid, keys[i]]
             );
         }
         conn.release();
