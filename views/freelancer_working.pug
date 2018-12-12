@@ -93,7 +93,7 @@ block script
       submitGroup.appendChild(rqidInput);
 
       rfileInput.name = 'rfile';
-      rfileInput.maxlength = 100;
+      rfileInput.setAttribute('maxlength', 100);
       rfileInput.placeholder = '결과 보고서 제목을 입력하세요';
       rfileInput.toggleAttribute('required');
       submitGroup.appendChild(rfileInput);
