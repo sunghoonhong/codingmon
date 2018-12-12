@@ -164,7 +164,7 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
             conn.release();
             console.error('현재 진행 중인 의뢰입니다');
             req.flash('adminError', '현재 진행 중인 의뢰는 수정할 수 없습니다');
-            return res.redirect(`/request/${req.body.targetId}}`);
+            return res.redirect(`/request/${req.body.targetId}`);
         }
         
     }
