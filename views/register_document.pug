@@ -5,6 +5,7 @@ block content
   p 문서 추가는 10개까지만 가능합니다
   form(action=`/client/register/document/${rqid}` method='post' enctype='multipart/form-data')
     #doc-list
+      input(type='file' name='document' required)
     a#append-doc.btn 문서추가
     button.btn(type='submit') 의뢰 등록
 block script
