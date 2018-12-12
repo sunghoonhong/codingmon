@@ -146,8 +146,10 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         reward, min_people, max_people, min_career,
         start_date, end_date, dev_start, dev_end
     } = req.body;   // 기본 정보 11개
+    const conn = await pool.getConnection(async conn => conn);
     try {
         if(start_date > end_date || min_people > max_people) {
+            conn.release();
             console.error('입력이 이상합니다');
             req.flash('adminError', '입력이 이상합니다');
             return res.redirect(`/request/${req.body.targetId}`);
@@ -159,19 +161,20 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         );
 
         if(exReq.dev_start && !exReq.dev_end) {
+            conn.release();
             console.error('현재 진행 중인 의뢰입니다');
             req.flash('adminError', '현재 진행 중인 의뢰는 수정할 수 없습니다');
-            return res.redirect(`/request/${req.body.targetId}}`);
+            return res.redirect(`/request/${req.body.targetId}`);
         }
         
     }
     catch (err) {
+        conn.release();
         next(err);
     }
-    var sql = 'UPDATE request  \
-                SET rname=?, reward=?, min_people=?, \
-                max_people=?, min_career=?, \
-                start_date=?, end_date=?';
+    var sql = `UPDATE request
+            SET rname=?, reward=?, min_people=?,
+            max_people=?, min_career=?, start_date=?, end_date=?`;
     var params = [
         rname, reward, min_people, max_people,
         min_career, start_date, end_date
@@ -185,15 +188,14 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         params.push(dev_end);
     }
     params.push(rqid);
-    const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(sql + ' WHERE rqid=?', params);
         var keys = Object.keys(req.body);
         for(var i=11; i<keys.length; ++i) {
             await conn.query(
-                'INSERT INTO requires (rqid, lang_name, level) \
-                VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE level=?',
-                [rqid, keys[i], req.body[keys[i]], req.body[keys[i]]]
+                `UPDATE requires SET level=?
+                WHERE rqid=? AND lang_name=?`,
+                [req.body[keys[i]], rqid, keys[i]]
             );
         }
         conn.release();
