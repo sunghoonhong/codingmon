@@ -1,15 +1,40 @@
 extends layout
 
 block content
-  label(for='tname') 팀 이름
-  div#tname= team.tname
+  if teamError
+    .error-message= teamError
+    
+  if user.id==team.mgr_id
+    .menu
+      a.btn(href='/team/profile/'+tname) 팀 정보
+      a.btn(href='/team/request/'+tname) 구인중인 의뢰
+      a.btn(href='/team/possible/'+tname) 신청 가능한 의뢰
+      a.btn(href='/team/waiting/'+tname) 신청한 의뢰
+      a.btn(href='/team/working/'+tname) 진행 중인 의뢰
+      a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
 
-  label(for='mgr_id') 팀장 ID
-  div#mgr_id= team.mgr_id
-
-  label(for='career') 경력
-  div#career= team.career
-
+  h3 기본 정보
+  table 
+    tr
+      th 팀 이름
+      th 팀장 ID
+      th 팀 인원
+      th 최소 경력
+    tr
+      td= team.tname
+      td= team.mgr_id
+      td= team.people_num
+      td= team.career
+  h3 팀 프로그래밍 언어 능숙도
+  table
+    tr
+      th 언어
+      th 능숙도
+    for know in knows
+      tr
+        td= know.lang_name
+        td= know.level
+        
   h3 팀 멤버
   table
     tr
@@ -17,8 +42,9 @@ block content
       th 추방
     for member in members
       tr
-        th= member.fid
-        th
+        td
+          a(href=`/profile/${member.fid}`)= member.fid
+        td
           if member.fid == team.mgr_id
             |팀장
             -continue
@@ -26,8 +52,13 @@ block content
             input(type='hidden' name='tname' value=team.tname)
             input(type='hidden' name='banId' value=member.fid)
             button.btn(type='submit') X
-
-  button.btn 멤버 추가(예정...)
+  if user.type=='admin' || user.id==team.mgr_id
+    h4 팀원 초대
+    form(action='/team/invite' method='post')
+      input(type='hidden' name='tname' value=team.tname)
+      input(name='inviteId' maxlength=20 value required)
+      button.btn(type='submit') 초대
+      
   h3 팀 삭제
   form(action='/team/delete' method='post')
     input(type='hidden' name='tname' value=team.tname)

@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  h2= `${rqid}번 의뢰에 대한 완료 요청`
+
+  if report
+    table
+      thead
+        tr
+          th 결과 보고서
+          th 완료 요청
+      tbody
+        tr
+          td= report.rfile
+          td
+            a.btn(href=`/client/report/${report.rid}/accept`) 수락
+            a.btn(href=`/client/report/${report.rid}/decline`) 거부
+  else
+    h4 아직 의뢰완료 요청이 없습니다

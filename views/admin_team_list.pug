@@ -2,6 +2,8 @@ extends layout
 
 block content
   h2 팀 관리
+  if teamError
+    .error-message= teamError
   table
     thead
       tr
@@ -14,5 +16,5 @@ block content
           td
             a(href=`/admin/team/${team.tname}`)= team.tname 
           td
-            a(href=`/admin/team/profile/${team.mgr_id}`)= team.mgr_id
+            a(href=`/profile/${team.mgr_id}`)= team.mgr_id
           td= team.people_num

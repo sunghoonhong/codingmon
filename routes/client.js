@@ -1,14 +1,17 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
 const { 
     isLoggedIn, isNotLoggedIn, isAdmin, isFreelancer, isClient
 } = require('./middlewares');
+const {document_dir} = require('./preprocess');
 const dbconfig = require('../config/database');
 const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
+// 의뢰자 자신의 정보 조회
 router.get('/profile', isLoggedIn, (req, res) => {
     res.render('profile', {
         title: '나의 프로필',
@@ -17,10 +20,13 @@ router.get('/profile', isLoggedIn, (req, res) => {
     });
 });
 
+// 특정 ID의 의뢰자 조회
 router.get('/profile/:id', (req, res) => {
     res.redirect('/profile/'+ req.params.id);
 });
 
+
+// 의뢰자 정보 수정
 router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     const { 
         id, pw, name, phone_num
@@ -29,7 +35,7 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     var params = [
         name, phone_num
     ];
-    if(pw!='비밀번호') {
+    if(pw) {
         const hash = await bcrypt.hash(pw, 13);
         sql += ', password=?';
         params.push(hash);
@@ -51,13 +57,31 @@ router.post('/profile/update', isLoggedIn, async (req, res, next) => {
     }
 });
 
+// 의뢰자 삭제
 router.post('/profile/delete', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
+        /*
+            진행중인의뢰가 있으면 삭제 불가
+        */
+        const [[exWork]] = await conn.query(
+            `SELECT * FROM client c, request r
+            WHERE c.id=r.cid AND r.dev_start is NOT NULL
+            AND r.dev_end is NULL AND c.id=?`,
+            req.body.targetId
+        );
+        if(exWork) {
+            console.error('진행중인의뢰가 있음');
+            req.flash('updateError', '진행 중인 의뢰가 있는 사용자는 삭제할 수 없습니다');
+            return res.redirect(`/profile/${req.body.targetId}`);
+        }
+        
+        // 의뢰자 삭제
         await conn.query(
             'DELETE FROM client WHERE id=?',
             req.body.targetId
         );
+        
         conn.release();
         res.redirect('/');
     }
@@ -67,18 +91,24 @@ router.post('/profile/delete', isAdmin, async (req, res, next) => {
     }
 });
 
-router.get('/request', async (req, res, next) => {
+
+// 의뢰자 자신의 의뢰 목록
+router.get('/request', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [requests] = await conn.query(
-            'SELECT * FROM request'
+            `SELECT * FROM request WHERE cid=?
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
         );
         conn.release();
 
-        res.render('request', {
-            title: '의뢰 목록',
+        res.render('client_request', {
+            title: '내 의뢰 목록',
             user: req.user,
-            requests: requests
+            requests: requests,
+            orderType: req.query.orderType
         });
     }
     catch (err) {
@@ -88,32 +118,92 @@ router.get('/request', async (req, res, next) => {
     }
 });
 
-router.get('/request/:rqid', async (req, res, next) => {
+
+// 특정 의뢰의 정보
+router.get('/request/:rqid', (req, res, next) => {
     res.redirect('/request/'+req.params.rqid);
 })
 
+/*
+    의뢰 신청과 관련
+*/
+
+// 특정 의뢰에 신청한 명단
 router.get('/request/:rqid/apply', async (req, res, next) => {
     const rqid = req.params.rqid;
     const conn = await pool.getConnection(async conn => conn);
     try {
-        const[applys] = await conn.query(
-            `SELECT f.id, f.career, f.rating,'skill','portfolio', 'waiting' as status
-            FROM request req, freelancer f, job_seeker j, applys a
-            WHERE req.rqid =? and a.rqid = req.rqid and j.job_seeker_id = a.job_seeker_id
-            and f.job_seeker_id = a.job_seeker_id and a.status ='waiting'`,
+        const[freelancers] = await conn.query(
+            `SELECT f.*
+            FROM request req, freelancer f, applys a
+            WHERE req.rqid =? AND a.rqid = req.rqid AND f.job_seeker_id = a.job_seeker_id`,
             rqid
         );
+        const[teams] = await conn.query(
+            `SELECT t.*
+            FROM request req, team t, applys a
+            WHERE req.rqid =? AND a.rqid = req.rqid AND t.job_seeker_id = a.job_seeker_id`,
+            rqid
+        );
+        conn.release();
         res.render('client_applys', {
             title: '신청자 목록',
             user: req.user,
-            applys: applys
+            freelancers: freelancers,
+            teams: teams,
+            rqid: req.params.rqid,
+            applyError: req.flash('applyError')
         });
     }
     catch (err) {
+        conn.release();
         next(err);
     }
-})
+});
 
+// 특정 의뢰에 신청한 사람들 중 선택
+router.post('/request/:rqid/apply', async (req, res, next) => {
+    const rqid = req.params.rqid;
+    const {job_seeker_type, job_seeker_id} = req.body;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [[request]] = await conn.query(
+            `SELECT dev_start FROM request WHERE rqid=?`, rqid
+        );
+        if(request.dev_start) {
+            req.flash('applyError', '이미 선택된 의뢰입니다');
+            conn.release();
+            return res.redirect(`/client/request/${rqid}/apply`);
+        }
+        // 수락한거 status = accepted
+        await conn.query(
+            `UPDATE request req, applys a
+            SET a.status = 'accepted', req.dev_start = now()
+            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.job_seeker_id = ?`,
+            [rqid, job_seeker_id]
+        );
+        // 나머지는 전부 status = decliend
+        await conn.query(
+            `UPDATE request req, applys a
+            SET a.status = 'declined'
+            WHERE req.rqid = ? AND req.rqid = a.rqid AND a.status = 'waiting'`,
+            rqid
+        );
+        conn.release();
+        res.redirect('/client/request');
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+/*
+    새로운 의뢰 등록
+*/
+
+// 의뢰 등록 양식
 router.get('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -134,6 +224,7 @@ router.get('/register', isClient, async (req, res, next) => {
     }
 });
 
+// 의뢰자가 새로운 의뢰 등록
 router.post('/register', isClient, async (req, res, next) => {
     const { 
         rname, reward, start_date, end_date,
@@ -142,7 +233,7 @@ router.post('/register', isClient, async (req, res, next) => {
     try {
         if(min_people > max_people && start_date > end_date) {
             req.flash('regError', '입력이 이상합니다');
-            res.redirect('/client/register');
+            return res.redirect('/client/register');
         }
     }
     catch (err) {
@@ -151,36 +242,265 @@ router.post('/register', isClient, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
         const [request] = await conn.query(
-            'INSERT INTO request(   \
-                cid, rname, reward, start_date, end_date,   \
-                min_people, max_people, min_career  \
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            `INSERT INTO request(
+                cid, rname, reward, start_date, end_date,
+                min_people, max_people, min_career
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`,
             [req.user.id, rname, reward, start_date, end_date,
             min_people, max_people, min_career]
         );
         var keys = Object.keys(req.body);
         for(var i=7; i<keys.length; i++) {
-            if(req.body[keys[i]]) {
+            await conn.query(
+                `INSERT INTO requires(rqid, lang_name, level) VALUES(?, ?, ?)`,
+                [request.insertId, keys[i], req.body[keys[i]]]
+            );
+        }
+        conn.release();
+        res.render('register_document', {
+            title: '의뢰 문서 등록',
+            user: req.user,
+            rqid: request.insertId
+        });
+
+    } catch (err) {
+        req.flash('regError', '의뢰 등록 오류');
+        console.error(err);
+        conn.release();
+        next(err);
+    }
+});
+
+// 새로운 의뢰 등록 시 복수의 의뢰문서 등록
+router.post('/register/document/:rqid', isClient, document_dir, multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, `public/document/${req.params.rqid}`)
+        },
+        filename: (req, file, cb) => {
+            cb(null, file.originalname)
+        }
+    })}).array('document', 10), async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try{
+        if(req.files) {
+            for(var i=0, file, exDoc; i<req.files.length; ++i) {
+                file = req.files[i];
+                [[exDoc]] = await conn.query(
+                    `SELECT * FROM document WHERE dfile=? AND rqid=?`,
+                    [file.originalname, req.params.rqid]
+                );
+                if(exDoc) continue;
                 await conn.query(
-                    'INSERT INTO requires(rqid, lang_name, level) \
-                    VALUES(?, ?, ?)',
-                    [request.insertId, keys[i], req.body[keys[i]]]
+                    `INSERT INTO document(dfile, rqid) VALUES(?, ?)`,
+                    [file.originalname, req.params.rqid]
                 );
             }
         }
         conn.release();
-        res.redirect('/');
+        return res.redirect(`/`);
     }
     catch (err) {
         conn.release();
-        req.flash('regError', '오류 발생')
+        req.flash('regError', '의뢰문서 업로드 오류')
         console.error(err);
         res.redirect('/client/register');
     }
 });
 
+// 현재 진행중인 의뢰목록
+router.get('/working', isLoggedIn, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [free_requests] = await conn.query(
+            `SELECT R.rqid, R.rname, R.start_date, R.dev_start, R.reward, F.id as fid
+            FROM request R, freelancer F, applys A
+            WHERE R.cid = ? AND F.job_seeker_id = A.job_seeker_id
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
+        );
+        const [team_requests] = await conn.query(
+            `SELECT R.rqid, R.rname, R.start_date, R.dev_start, R.reward, T.tname
+            FROM request R, team T, applys A
+            WHERE R.cid = ? AND T.job_seeker_id = A.job_seeker_id
+            AND A.rqid = R.rqid AND A.status = 'accepted' AND R.dev_end IS NULL
+            ORDER BY ${req.query.orderType}`,
+            req.user.id
+        );
+        conn.release();
+        res.render('client_working', {
+            title: '진행 중인 의뢰',
+            user: req.user,
+            free_requests: free_requests,
+            team_requests: team_requests,
+            orderType: req.query.orderType
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
 
-router.get('/', async (req, res, next) => {
+// 특정 의뢰에 대한 의뢰완료요청 목록
+router.get('/request/:rqid/complete', isLoggedIn, async (req, res, next) => {
+    const rqid = req.params.rqid;
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const[[report]] = await conn.query(
+            `SELECT rep.rfile, rep.rid
+            FROM request req, report rep
+            WHERE req.rqid = rep.rqid AND rep.status = 'waiting' AND req.rqid = ?`,
+            rqid
+        );
+        conn.release();
+        res.render('client_complete', {
+            title: '의뢰완료 요청',
+            user: req.user,
+            report: report,
+            rqid: req.params.rqid
+        });
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+/*
+    의뢰완료요청에 대해 수락
+*/
+
+// 특정 의뢰완료요청에 대해 수락할 시 평점 지정 양식
+router.get('/report/:rid/accept', isLoggedIn, (req, res, next) => {
+    try {
+        res.render('client_accept', {
+            title: '요청 수락',
+            user: req.user,
+            rid: req.params.rid
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
+// 특정 의뢰완료요청에 대해 평점 지정과 함께 수락 처리
+router.post('/report/:rid/accept', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        // 개발종료날짜
+        await conn.query(
+            `UPDATE report rep, request req
+            SET rep.status = 'accepted', req.dev_end = now()
+            WHERE rep.rid = ? and rep.rqid = req.rqid`,
+            req.params.rid
+        );
+        // 의뢰를 맡은 대상을 선택
+        const [[freelancer]] = await conn.query(
+            `SELECT f.id
+            FROM freelancer f, report rep
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = f.job_seeker_id`,
+            req.params.rid
+        );
+        const [[team]] = await conn.query(
+            `SELECT t.tname
+            FROM team t, report rep
+            WHERE rep.rid = ? AND rep.status = 'accepted' AND rep.job_seeker_id = t.job_seeker_id`,
+            req.params.rid
+        );
+        
+        // 프리랜서일 경우
+        if(freelancer) {
+            await conn.query(
+                `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+                [req.params.rid, req.body.rating]
+            );
+            await conn.query(
+                `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+                [freelancer.id, req.params.rid]
+            );
+        }
+        // 팀일 경우
+        else if(team) {
+            const [members] = await conn.query(
+                `SELECT * FROM participates WHERE tname=?`,
+                team.tname
+            );
+            await conn.query(
+                `INSERT INTO accepted(arid, j_rating) VALUES (?, ?)`,
+                [req.params.rid, req.body.rating]
+            );
+            for(var i=0; i<members.length; ++i) {  
+                await conn.query(
+                    `INSERT INTO owns_internal(fid, arid) VALUES (?, ?)`,
+                    [members[i].fid, req.params.rid]
+                );
+            }
+
+        }
+        // 예외 에러
+        else {
+            console.error('수락 과정에서 대상이 없습니다');
+        }
+        conn.release();
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+/*
+    의뢰완료요청에 대해 거절
+*/
+
+// 특정 의뢰완료요청에 대해 거절할 시 거절 메시지 입력 양식
+router.get('/report/:rid/decline', isLoggedIn, (req, res, next) => {
+    try {
+        res.render('client_decline', {
+            title: '요청 거부',
+            user: req.user,
+            rid: req.params.rid
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
+// 특정 의뢰완료요청에 대해 거절메시지와 함께 거절 처리
+router.post('/report/:rid/decline', isLoggedIn, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        // report status 를 declined로 업데이트
+        await conn.query(
+            `UPDATE report rep
+            SET rep.status = 'declined'
+            WHERE rep.rid = ?`,
+            req.params.rid
+        );
+        // declined에 추가
+        await conn.query(
+            `INSERT INTO declined VALUES (?, ?)`,
+            [req.params.rid, req.body.message]
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        next(err);
+    }
+});
+
+
+// 의뢰자의 홈페이지
+router.get('/', (req, res, next) => {
     try {
         res.render('main', {
             title: 'CodingMon - DBDBDIP @ client',
@@ -189,7 +509,8 @@ router.get('/', async (req, res, next) => {
         });
     }
     catch (err) {
-        console.log(err);
+        console.error(err);
+        next(err);
     }
 });
 

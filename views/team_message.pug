@@ -1,0 +1,33 @@
+extends layout
+
+block content
+  .menu
+    a.btn(href='/team/profile/'+tname) 팀 정보
+    a.btn(href='/team/request/'+tname) 구인중인 의뢰
+    a.btn(href='/team/possible/'+tname) 신청 가능한 의뢰
+    a.btn(href='/team/waiting/'+tname) 신청한 의뢰
+    a.btn(href='/team/working/'+tname) 진행 중인 의뢰
+    a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
+  h2 최근 거절 메시지
+  table
+    thead
+      tr
+        th 보고서
+        th 거절메시지
+    tbody
+      tr
+        td= messages[0].rfile
+        td= messages[0].message
+
+  h2 이전 거절 메시지
+  table
+    thead
+      tr
+        th 보고서
+        th 거절메시지
+    tbody
+      each message, i in messages
+        if i>0
+          tr
+            td= message.rfile
+            td= message.message

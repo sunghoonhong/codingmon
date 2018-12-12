@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h2 최근 거절 메시지
+  table
+    thead
+      tr
+        th 보고서
+        th 거절메시지
+    tbody
+      tr
+        td= messages[0].rfile
+        td= messages[0].message
+
+  h2 이전 거절 메시지
+  table
+    thead
+      tr
+        th 보고서
+        th 거절메시지
+    tbody
+      each message, i in messages
+        if i>0
+          tr
+            td= message.rfile
+            td= message.message

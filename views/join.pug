@@ -2,7 +2,7 @@ extends layout
 
 block content
   if !joinType
-    h2= 'Select Join Type'
+    h2 가입 유형을 선택하세요
     .jointype
       form#join_type(action='/join' method='post')
         .input-group
@@ -15,26 +15,26 @@ block content
           .error-message= joinError
 
   else if joinType=='freelancer'
-    h2= 'Freelancer Join'
+    h2 프리랜서 가입
     form#join-form(action='/auth/join/freelancer' method='post')
       .input-group
         label(for='id') ID
-        input#id(name='id' required autofocus)
+        input#id(name='id' maxlength=20 required autofocus)
       .input-group
         label(for='pw') 비밀번호
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#name(name='name' required)
+        input#name(name='name' maxlength=20 required)
       .input-group
-        label(for='phone_num') 휴대폰 번호
-        input#phone_num(name='phone_num' required)
+        label(for='phone_num') 휴대폰 번호 (000-0000-0000)
+        input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
       .input-group
         label(for='age') 나이
         input#age(type='number' min=0 name='age' required)
       .input-group
         label(for='major') 전공
-        input#major(name='major' required)  
+        input#major(name='major' maxlength=20 required)  
       .input-group
         label(for='career') 경력
         input#career(type='number' min=0 name='career' required)
@@ -48,20 +48,20 @@ block content
         .error-message= joinError
     
   else if joinType=='client'
-    h2= 'Client Join'
+    h2 의뢰자 가입
     form#join-form(action='/auth/join/client' method='post')
       .input-group
         label(for='id') ID
-        input#id(name='id' required autofocus)
+        input#id(name='id' maxlength=20 required autofocus)
       .input-group
         label(for='pw') 비밀번호
         input#pw(type='password' name='pw' required)
       .input-group
         label(for='name') 이름
-        input#name(name='name' required)
+        input#name(name='name' maxlength=20 required)
       .input-group
-        label(for='phone_num') 휴대폰 번호
-        input#phone_num(name='phone_num' required)
+        label(for='phone_num') 휴대폰 번호 (000-0000-0000)
+        input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' required)
       button#join.btn(type='submit') 가입
       if joinError
         .error-message= joinError

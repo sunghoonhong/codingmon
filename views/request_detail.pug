@@ -2,6 +2,9 @@ extends layout
 
 block content
   h2 의뢰 정보
+  if adminError
+    .error-message= adminError
+    
   form#profile-form(action='/request/update' method='post')
     .input-group
       label(for='rqid') 의뢰번호
@@ -14,7 +17,7 @@ block content
         input#cid(name='cid' value=request.cid required readonly)
     .input-group
       label(for='rname') 의뢰 제목
-      input#rname(name='rname' value=request.rname required readonly)
+      input#rname(name='rname' maxlength=100 value=request.rname required readonly)
     .input-group
       label(for='reward') 의뢰 보상
       input#reward(type='number' min=0 name='reward' value=request.reward required readonly)
@@ -59,6 +62,9 @@ block content
     form(action='/request/delete', method='post')
       input(type='hidden' name='targetId' value=request.rqid)
       button.btn(type='submit') 삭제
+      
+  h3 의뢰 문서
+    a.btn(href=`/request/${request.rqid}/document`) 조회
 
 block script
   if user && user.type == 'admin'

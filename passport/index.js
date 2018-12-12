@@ -4,6 +4,7 @@ const dbconfig = require('../config/database');
 const pool = mysql.createPool(dbconfig);
 
 module.exports = (passport) => {
+    // 로그인에 성공하면 세션에 ID와 사용자 종류를 저장
     passport.serializeUser(async (user, done) => {
         const id = user.id;
         try {
@@ -42,16 +43,17 @@ module.exports = (passport) => {
             done(err);
         }
     });
-
+    
+    // 이후 세션에 저장된 정보를 통해 해당 유저의 모든 정보를 가져온다
     passport.deserializeUser(async (user, done) => {
         try {
             const conn = await pool.getConnection(async conn => conn);
             try {
                 const type = user.type;
-                const [exUser] = await conn.query(
-                    'SELECT * FROM '+type+' WHERE id=?', user.id
+                const [[exUser]] = await conn.query(
+                    `SELECT * FROM ${type} WHERE id=?`, user.id
                 );
-                user = exUser[0];
+                user = exUser;
                 user.type = type;
                 done(null, user);
                 conn.release();

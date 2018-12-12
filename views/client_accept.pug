@@ -1,0 +1,8 @@
+extends layout
+
+block content
+
+  h3 평점
+  form(action=`/client/report/${rid}/accept` method='post')
+    input#rating(type='number' name='rating' min=0 max=5 placeholder='0~5' required)
+    button.btn(type='submit') 확인

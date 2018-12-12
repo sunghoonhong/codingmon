@@ -1,0 +1,62 @@
+extends layout
+
+block content
+	-
+		const index = {
+		'rqid': '의뢰번호',
+		'reward': '의뢰금액',
+		'start_date': '의뢰시작날짜'
+		};
+		
+	h2 진행중인 의뢰 목록
+		form(action='/client/working' method='get')
+			select(name='orderType')
+				each label, key in index
+					if key == orderType
+						option(value=key selected)= label
+					else
+						option(value=key)= label
+			button.btn(type='submit') 정렬
+
+	h2 개인 목록
+	table
+		tr
+			th 의뢰 번호
+			th 의뢰 제목
+			th 의뢰 시작날짜
+			th 개발 시작날짜
+			th 의뢰 금액
+			th 신청자 ID
+			th 요청 확인
+		for request in free_requests
+			tr
+				td
+					a(href=`/request/${request.rqid}`)= request.rqid
+				td= request.rname
+				td= format(request.start_date)
+				td= format(request.dev_start)
+				td= request.reward
+				td= request.fid
+				td
+					a.btn(href=`/client/request/${request.rqid}/complete`) 확인
+	h2 팀 목록
+	table
+		tr
+			th 의뢰 번호
+			th 의뢰 제목
+			th 의뢰 시작날짜
+			th 개발 시작날짜
+			th 의뢰 금액
+			th 팀 이름
+			th 요청 확인
+		for request in team_requests
+			tr
+				td
+					a(href=`/request/${request.rqid}`)= request.rqid
+				td= request.rname
+				td= format(request.start_date)
+				td= format(request.dev_start)
+				td= request.reward
+				td= request.tname
+				td
+					a.btn(href=`/client/request/${request.rqid}/complete`) 확인

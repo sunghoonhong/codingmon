@@ -1,22 +1,23 @@
 extends layout
 
 block content
-
+  h3 기본 정보
   if target
     if target.type == 'client'
       form#profile-form(action='/'+target.type+'/profile/update' method='post')
         .input-group
           label(for='id') ID
-          input#id(name='id' value=target.id required readonly)
-        .input-group
-          label(for='pw') 비밀번호
-          input#pw(type='password' name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
+          input#id(name='id' maxlength=20 value=target.id required readonly)
+        if user.type=='admin' || target.id==user.id
+          .input-group
+            label(for='pw') 비밀번호
+            input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
-          input#name(name='name' value=target.name required readonly)
+          input#name(name='name' maxlength=20 value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
-          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+          input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
         .input-group
           label(for='rating') 평점
           input#rating(name='rating' value=target.rating required readonly)
@@ -24,27 +25,30 @@ block content
         if user.type == 'admin' || target.id == user.id
           button#update-profile.btn(type='button') 수정
           input#update-submit.btn(type='hidden' value='저장')
+          if updateError
+            .error-message= updateError
 
     else if target.type == 'freelancer'
       form#profile-form(action='/'+target.type+'/profile/update' method='post')
         .input-group
           label(for='id') ID
-          input#id(name='id' value=target.id required readonly)
-        .input-group
-          label(for='pw') 비밀번호
-          input#pw(type='password' name='pw' placeholder='비밀번호' value='비밀번호' readonly required)
+          input#id(name='id' maxlength=20 value=target.id required readonly)
+        if user.type=='admin' || target.id==user.id
+          .input-group
+            label(for='pw') 비밀번호
+            input#pw(type='password' name='pw' placeholder='변경할 비밀번호' readonly)
         .input-group
           label(for='name') 이름
-          input#name(name='name' value=target.name required readonly)
+          input#name(name='name' maxlength=20 value=target.name required readonly)
         .input-group
           label(for='phone_num') 휴대폰 번호
-          input#phone_num(name='phone_num' value=target.phone_num required readonly)
+          input#phone_num(type='tel' pattern='[0-9]{3}-[0-9]{4}-[0-9]{4}' name='phone_num' value=target.phone_num required readonly)
         .input-group
           label(for='age') 나이
           input#age(type='number' min=0 name='age' value=target.age required readonly)
         .input-group
           label(for='major') 전공
-          input#major(name='major' value=target.major required readonly)  
+          input#major(name='major' maxlength=20 value=target.major required readonly)  
         .input-group
           label(for='career') 경력
           input#career(type='number' min=0 name='career' value=target.career required readonly)
@@ -64,8 +68,27 @@ block content
           if updateError
             .error-message= updateError
 
-        h2 내적 포트폴리오
-        h2 외적 포트폴리오
+        h3 내적 포트폴리오
+        table
+          tr
+            th 의뢰 번호
+            th 의뢰 제목
+            th 개발 시작날짜
+            th 개발 종료날짜
+            th 받은 평점
+            th 결과 보고서
+          for internal in internals
+            tr
+              td
+                a(href=`/request/${internal.rqid}`)= internal.rqid
+              td= internal.rname
+              td= format(internal.dev_start)
+              td= format(internal.dev_end)
+              td= internal.j_rating
+              td= internal.rfile
+
+        h3 외적 포트폴리오
+        a.btn(href=`/freelancer/${target.id}/external`) 조회
 
     if user.type=='admin'
       form(action='/'+target.type+'/profile/delete', method='post')

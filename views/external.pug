@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h2= `${targetId}의 외적 포트폴리오`
+  table
+    tr
+      th 포트폴리오
+      if user.type == 'admin' || user.id == targetId
+        th 삭제
+    
+    for external in externals
+      tr
+        td
+          a(href=`/freelancer/${targetId}/external/${external.efile}`)= external.efile
+        if user.type == 'admin' || user.id == targetId
+          td
+            form(action=`/delete/external` method='post')
+              input(type='hidden' name='pid' value=external.pid)
+              button.btn(type='submit') X
+  if externalError
+    .error-message= externalError
+    
+  if user.type == 'admin' || user.id == targetId
+    h2 외적 포트폴리오 추가
+    form(action=`/create/external/${targetId}` method='post' enctype='multipart/form-data')
+      input(type='file' name='efile')
+      button.btn(type='submit') 추가

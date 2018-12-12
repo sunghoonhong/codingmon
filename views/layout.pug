@@ -20,7 +20,7 @@ html
     link(rel='stylesheet' href='/stylesheets/main.css')
   body
     header
-      a#index(href='/') Coding Mon
+      a#index(href='/') 코딩몬 CODINGMON
     .menu
       if user
         if user.type == 'admin'
@@ -33,15 +33,17 @@ html
         else if user.type == 'freelancer'
           a.btn(href='/freelancer/profile') 프로필
           a.btn(href='/freelancer/request') 구인 중인 의뢰
+          a.btn(href='/freelancer/possible') 신청 가능한 의뢰
           a.btn(href='/freelancer/waiting') 신청한 의뢰
           a.btn(href='/freelancer/working') 진행중인 의뢰
+          a.btn(href='/freelancer/accepted') 요청수락된 의뢰
           a.btn(href='/team/list') 나의 팀 목록
           a.btn(href='/team/create') 팀 생성
 
         else if user.type == 'client'
           a.btn(href='/client/profile') 프로필
           a.btn(href='/client/request') 나의 의뢰
-          a.btn(href='/client/report') 완료요청 확인
+          a.btn(href='/client/working') 진행중인 의뢰
           a.btn(href='/client/register') 의뢰 등록
     .container
       .profile
@@ -52,19 +54,15 @@ html
         else
           form#login-form(action='/auth/login' method='post')
             .input-group
-              label(for='id') ID
-              input#id(name='id' required autofocus)
+              label(for='login-id') ID
+              input#login-id(name='id' required autofocus)
             .input-group
-              label(for='pw') PW
-              input#pw(type='password' name='pw' required)
+              label(for='login-pw') PW
+              input#login-pw(type='password' name='pw' required)
             if loginError
               .error-message= loginError
-            button#login.btn(type='submit') Login
-            a#join.btn(href='/join') Join
+            button#login.btn(type='submit') 로그인
+            a#join.btn(href='/join') 회원가입
       
       block content
-    
-    footer
-      | Made by DBDBDIP
-
     block script

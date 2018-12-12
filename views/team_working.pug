@@ -1,0 +1,114 @@
+extends layout
+
+block content
+  .menu
+    a.btn(href='/team/profile/'+tname) 팀 정보
+    a.btn(href='/team/request/'+tname) 구인중인 의뢰
+    a.btn(href='/team/possible/'+tname) 신청 가능한 의뢰
+    a.btn(href='/team/waiting/'+tname) 신청한 의뢰
+    a.btn(href='/team/working/'+tname) 진행 중인 의뢰
+    a.btn(href='/team/accepted/'+tname) 요청수락된 의뢰
+
+  h2 팀이 진행중인 의뢰 목록
+
+  if submitError
+    .error-message= submitError
+  
+  h3 개발 중인 의뢰
+  h4#submit-form
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+      th 완료 신청
+    for dev in devs
+      tr
+        td
+          a(href=`/request/${dev.rqid}`)= dev.rqid
+        td= dev.cid
+        td= dev.rname
+        td= format(dev.dev_start)
+        td= dev.reward
+        td
+          button.btn.submit-btn(data-rqid=dev.rqid data-tname=tname) 신청
+
+  h3 수락 대기중인 의뢰
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+      th 신청 상태
+    for waiting in waitings
+      tr
+        td
+          a(href=`/dev/${waiting.rqid}`)= waiting.rqid
+        td= waiting.cid
+        td= waiting.rname
+        td= format(waiting.dev_start)
+        td= waiting.reward
+        td 대기중
+
+  h3 거절된 의뢰
+  table
+    tr
+      th 의뢰 번호
+      th 의뢰자 ID
+      th 의뢰 제목
+      th 개발 시작날짜
+      th 의뢰 금액
+      th 다시 신청
+      th 거절 사유
+    for declined in declineds
+      tr
+        td
+          a(href=`/request/${declined.rqid}`)= declined.rqid
+        td= declined.cid
+        td= declined.rname
+        td= format(declined.dev_start)
+        td= declined.reward
+        td
+          button.btn.submit-btn(data-rqid=declined.rqid data-tname=tname) 신청
+        td
+          a.btn(href=`/team/${tname}/request/${declined.rqid}/declined`) 사유
+
+block script
+  script.
+    document.querySelectorAll('.submit-btn').forEach(btn => { addEventListener('click', function(e) {
+      if(document.querySelector('#submit-group') || e.target != btn)
+        return;
+      var submitForm = document.createElement('form');
+      var submitGroup = document.createElement('div');
+      var rqidInput = document.createElement('input');
+      var rfileInput = document.createElement('input');
+      var submitBtn = document.createElement('button');
+      document.querySelector('#submit-form').innerText = e.target.dataset.rqid + '번 의뢰 완료신청 결과보고서';
+
+      submitForm.action = `/team/${e.target.dataset.tname}/report/submit`;
+      submitForm.method = 'post';
+      
+      submitGroup.className = 'input-group';
+      submitGroup.id = 'submit-group';
+      
+      rqidInput.type = 'hidden';
+      rqidInput.name = 'rqid';
+      rqidInput.value = e.target.dataset.rqid;
+      submitGroup.appendChild(rqidInput);
+
+      rfileInput.name = 'rfile';
+      rfileInput.placeholder = '결과 보고서 제목을 입력하세요';
+      rfileInput.toggleAttribute('required');
+      submitGroup.appendChild(rfileInput);
+
+      submitBtn.className = 'btn';
+      submitBtn.type = 'submit';
+      submitBtn.textContent = '제출';
+      submitGroup.appendChild(submitBtn);
+      submitForm.appendChild(submitGroup);
+      document.querySelector('#submit-form').appendChild(submitForm);
+    })});

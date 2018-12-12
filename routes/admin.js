@@ -6,6 +6,7 @@ const router = express.Router();
 
 const pool = mysql.createPool(dbconfig);
 
+// 일반 사용자 목록
 router.get('/user', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
@@ -37,6 +38,8 @@ router.get('/user', isAdmin, async (req, res, next) => {
     }
 });
 
+
+// 전체 의뢰 목록
 router.get('/request', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
@@ -62,6 +65,7 @@ router.get('/request', isAdmin, async (req, res, next) => {
     }
 });
 
+// 전체 언어 목록
 router.get('/lang', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
@@ -90,30 +94,55 @@ router.get('/lang', isAdmin, async (req, res, next) => {
     }
 });
 
+// 새로운 언어 추가
 router.post('/lang', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
         try {
+            // 이미 있는 언어 예외처리
             const [exLang] = await conn.query(
                 'SELECT * FROM program_lang WHERE lang_name=?',
                 req.body.lang_name
             );
             if(exLang.length) {
                 req.flash('createError', '이미 있는 언어입니다');
+                conn.release();
                 return res.redirect('/admin/lang');
             }
+            // 프로그래밍 언어 목록에 추가
             await conn.query(
-                'INSERT INTO program_lang(lang_name) \
-                VALUES(?)',
+                'INSERT INTO program_lang(lang_name) VALUES(?)',
                 req.body.lang_name
             );
+            
+            const [job_seekers] = await conn.query(
+                `SELECT * FROM job_seeker`
+            );
+            const [requests] = await conn.query(
+                `SELECT rqid FROM request`
+            );
+
+            // 모든 프리랜서에 대해 프로그래밍 언어 능숙도에 0으로 추가
+            for(var i=0; i<job_seekers.length; i++) {
+                await conn.query(
+                    `INSERT INTO knows VALUES(?,?,?)`,
+                    [job_seekers[i].job_seeker_id, req.body.lang_name, 0]
+                )
+            }
+            
+            // 모든 의뢰에 대해 요구 언어 능숙도에 0으로 추가
+            for(var i=0; i<requests.length; i++) {
+                await conn.query(
+                    `INSERT INTO requires VALUES(?,?,?)`,
+                    [requests[i].rqid, req.body.lang_name, 0]
+                )
+            }
             conn.release();
             return res.redirect('/admin/lang');
         }
         catch (err) {
             conn.release();
-            console.error('Query Error');
-            next(err);
+            console.error(err);
             return res.redirect('/admin/lang');
         }
     }
@@ -123,6 +152,8 @@ router.post('/lang', isAdmin, async (req, res, next) => {
         next(err);
     }
 });
+
+// 언어 삭제
 router.post('/lang/delete', isAdmin, async (req, res, next) => {
     try {
         const conn = await pool.getConnection(async conn => conn);
@@ -145,7 +176,6 @@ router.post('/lang/delete', isAdmin, async (req, res, next) => {
         catch (err) {
             conn.release();
             console.error('Query Error');
-            next(err);
             return res.redirect('/admin/lang');
         }
     }
@@ -156,6 +186,8 @@ router.post('/lang/delete', isAdmin, async (req, res, next) => {
     }
 });
 
+
+// 전체 팀 목록
 router.get('/team', isAdmin, async (req, res, next) => {
     const conn = await pool.getConnection(async conn => conn);
     try {
@@ -163,7 +195,8 @@ router.get('/team', isAdmin, async (req, res, next) => {
         res.render('admin_team_list', {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
-            teams: teams
+            teams: teams,
+            teamError: req.flash('teamError')
         });
         conn.release();
     }
@@ -174,6 +207,8 @@ router.get('/team', isAdmin, async (req, res, next) => {
     }
 });
 
+
+// 특정 팀 조회
 router.get('/team/:tname', isAdmin, async (req, res, next) => {
     const tname = req.params.tname;
     const conn = await pool.getConnection(async conn => conn);
@@ -181,22 +216,25 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
         const [[team]] = await conn.query(
             'SELECT * FROM team WHERE tname=?', tname
         );
-        if(!team) {
-            res.render('alert', {
-                title: '경고 메시지',
-                message: '그런 팀은 없습니다'
-            });
-        }
         const [members] = await conn.query(
             'SELECT fid FROM participates WHERE tname=?',
             tname
         );
+        const [knows] = await conn.query(
+            `SELECT * FROM team t, knows k
+            WHERE t.job_seeker_id = k.job_seeker_id
+            AND t.tname=?`, tname
+        );
+
         conn.release();
         res.render('team_profile', {
             title: '팀 관리 - 관리자 모드',
             user: req.user,
             team: team,
-            members: members
+            tname: team.tname,
+            knows: knows,
+            members: members,
+            teamError: req.flash('teamError')
         });
     }
     catch (err) {
@@ -206,7 +244,52 @@ router.get('/team/:tname', isAdmin, async (req, res, next) => {
     }
 });
 
-router.get('/', isAdmin, async (req, res, next) => {
+
+// 거절된 의뢰완료신청 목록
+router.get('/report', isAdmin, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        const [declineds] = await conn.query(
+            `SELECT rp.rid, rq.rqid, rq.rname, rp.rfile, de.message
+            FROM report rp, request rq, declined de
+            WHERE rp.rid = de.drid AND rp.rqid = rq.rqid`
+        );
+
+        conn.release();
+        res.render('admin_report', {
+            title: '의뢰완료요청 관리',
+            user: req.user,
+            declineds: declineds
+        });
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+// 거절된 의뢰완료신청 삭제
+router.post('/delete/declined', isAdmin, async (req, res, next) => {
+    const conn = await pool.getConnection(async conn => conn);
+    try {
+        // 결과보고서는 파일이름으로 대체했으므로 파일 처리 필요없음
+        await conn.query(
+            `DELETE FROM report WHERE rid=?`,
+            [req.body.drid]
+        );
+        conn.release();
+        return res.redirect('/');
+    }
+    catch (err) {
+        conn.release();
+        console.error(err);
+        next(err);
+    }
+});
+
+// 관리자 초기화면
+router.get('/', isAdmin, (req, res, next) => {
     try {
         res.render('main', {
             title: 'CodingMon - DBDBDIP @ admin',

@@ -2,14 +2,14 @@ extends layout
 
 block content
   h2 팀 생성
-    form#create-form(action='/team/create' method='post')
-      .input-group
-        label(for='tname') 팀 이름
-        input#tname(name='tname' required autofocus)
+  form#create-form(action='/team/create' method='post')
+    .input-group
+      label(for='tname') 팀 이름
+      input#tname(name='tname' maxlength=20 required autofocus)
 
-      .input-group
-        label(for='memberId') 팀원 ID
-        input#memberId(name='memberId' required)
-      button#create.btn(type='submit') 팀 생성
-      if createError
-        .error-message= createError
+    .input-group
+      label(for='memberId') 팀원 ID
+      input#memberId(name='memberId' maxlength=20 required)
+    button#create.btn(type='submit') 팀 생성
+    if createError
+      .error-message= createError
