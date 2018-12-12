@@ -146,8 +146,10 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         reward, min_people, max_people, min_career,
         start_date, end_date, dev_start, dev_end
     } = req.body;   // 기본 정보 11개
+    const conn = await pool.getConnection(async conn => conn);
     try {
         if(start_date > end_date || min_people > max_people) {
+            conn.release();
             console.error('입력이 이상합니다');
             req.flash('adminError', '입력이 이상합니다');
             return res.redirect(`/request/${req.body.targetId}`);
@@ -159,6 +161,7 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         );
 
         if(exReq.dev_start && !exReq.dev_end) {
+            conn.release();
             console.error('현재 진행 중인 의뢰입니다');
             req.flash('adminError', '현재 진행 중인 의뢰는 수정할 수 없습니다');
             return res.redirect(`/request/${req.body.targetId}}`);
@@ -166,6 +169,7 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         
     }
     catch (err) {
+        conn.release();
         next(err);
     }
     var sql = 'UPDATE request  \
@@ -185,7 +189,6 @@ router.post('/request/update', isLoggedIn, async (req, res, next) => {
         params.push(dev_end);
     }
     params.push(rqid);
-    const conn = await pool.getConnection(async conn => conn);
     try {
         await conn.query(sql + ' WHERE rqid=?', params);
         var keys = Object.keys(req.body);
