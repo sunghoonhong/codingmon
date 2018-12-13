@@ -284,11 +284,12 @@ router.get('/possible/:tname', isMgr, async (req, res, next) => {
             (SELECT * FROM knows K, requires req, program_lang pl
             WHERE T.job_seeker_id = K.job_seeker_id
             AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
-            AND req.rqid = R.rqid AND K.level < req.level AND T.tname = ?)`,
+            AND req.rqid = R.rqid AND K.level < req.level AND T.tname = ?)
+            ORDER BY ${req.query.orderType}`,
             [req.params.tname, req.params.tname]
         );
         conn.release();
-        res.render('team_request', {
+        res.render('team_possible', {
             title: '신청 가능한 의뢰 목록',
             user: req.user,
             tname: req.params.tname,

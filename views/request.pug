@@ -2,22 +2,22 @@ extends layout
 
 block content
 
-  -
-    const index = {
-      'rqid': '의뢰번호',
-      'reward': '의뢰금액',
-      'start_date': '의뢰시작날짜'
-    };
+  //- -
+  //-   const index = {
+  //-     'rqid': '의뢰번호',
+  //-     'reward': '의뢰금액',
+  //-     'start_date': '의뢰시작날짜'
+  //-   };
 
-  h2= tableName
-    form(action='/freelancer/request' method='get')
-      select(name='orderType')
-        each label, key in index
-          if key == orderType
-            option(value=key selected)= label
-          else
-            option(value=key)= label
-      button.btn(type='submit') 정렬
+  //- h2= tableName
+  //-   form(action='/admin/request' method='get')
+  //-     select(name='orderType')
+  //-       each label, key in index
+  //-         if key == orderType
+  //-           option(value=key selected)= label
+  //-         else
+  //-           option(value=key)= label
+  //-     button.btn(type='submit') 정렬
   table
     thead
       tr
