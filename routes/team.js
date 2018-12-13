@@ -172,7 +172,7 @@ router.post('/delete', isLoggedIn, async(req, res, next) => {
                 return res.redirect(`/team/profile/${req.body.tname}`);
         }
         const [[team]] = await conn.query(
-            `SELETE job_seeker_id FROM team WHERE tname=?`,
+            `SELECT job_seeker_id FROM team WHERE tname=?`,
             req.body.tname
         );
         const job_seeker_id = team.job_seeker_id;
