@@ -314,11 +314,12 @@ router.get('/possible', isLoggedIn, async (req, res, next) => {
             (SELECT * FROM knows K, requires req, program_lang pl
             WHERE F.job_seeker_id = K.job_seeker_id
             AND K.lang_name = pl.lang_name AND pl.lang_name = req.lang_name 
-            AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)`,
+            AND req.rqid = R.rqid AND K.level < req.level AND F.id = ?)
+            ORDER BY ${req.query.orderType}`,
             [req.user.id, req.user.id]
         );
         conn.release();
-        res.render('freelancer_request', {
+        res.render('freelancer_possible', {
             title: '신청 가능한 의뢰 목록',
             user: req.user,
             requests: requests,

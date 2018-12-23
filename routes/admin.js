@@ -41,17 +41,21 @@ router.get('/user', isAdmin, async (req, res, next) => {
 
 // 전체 의뢰 목록
 router.get('/request', isAdmin, async (req, res, next) => {
+    if(!req.query.orderType) req.query.orderType = 'rqid';
     try {
         const conn = await pool.getConnection(async conn => conn);
         try {
             const [requests] = await conn.query(
-                'SELECT * FROM request'
+                `SELECT * FROM request
+                ORDER BY ${req.query.orderType}`
             );
             conn.release();
             res.render('request', {
                 title: '의뢰 관리',
                 user: req.user,
-                requests: requests
+                requests: requests,
+                tableName: '전체 의뢰 관리',
+                orderType: req.query.orderType
             });
         }
         catch (err) {
